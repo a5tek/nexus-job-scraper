@@ -1,9 +1,16 @@
+import os
+import sys
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool, text
 from alembic import context
+
+# Ensure apps/api is in sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from app.core.config import settings
 from app.db.base import Base
 import app.models  # Ensures all models are registered with Base.metadata
+
 
 config = context.config
 

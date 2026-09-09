@@ -58,6 +58,28 @@ async def request_context_middleware(request: Request, call_next):
     )
     return response
 
+from fastapi.exceptions import HTTPException as StarletteHTTPException
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if isinstance(exc.detail, dict) and "error" in exc.detail:
+        content = exc.detail
+    elif isinstance(exc.detail, dict):
+        content = {"error": exc.detail}
+    else:
+        content = {
+            "error": {
+                "code": f"HTTP_{exc.status_code}",
+                "message": str(exc.detail),
+            }
+        }
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=content,
+        headers=exc.headers,
+    )
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
