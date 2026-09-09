@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_current_user_optional
 from app.db.session import get_db
 from app.embeddings.provider import embedding_provider
 from app.models.listing import Listing
@@ -23,26 +23,31 @@ async def get_opportunity_feed(
     company: Optional[str] = None,
     limit: int = Query(default=20, le=100),
     offset: int = 0,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Returns the personalized opportunity feed for the authenticated user.
-    Results are ranked by semantic match score by default.
+    Returns the opportunity feed.
+    If authenticated, results are personalized and ranked by semantic match score.
     """
-    # Join Listing with Match (for current user) and SavedListing
-    query = (
-        select(Listing, Match, SavedListing, RawListing.source_url)
-        .join(RawListing, Listing.raw_listing_id == RawListing.id)
-        .outerjoin(
-            Match,
-            (Match.listing_id == Listing.id) & (Match.user_id == current_user.id),
+    if current_user:
+        query = (
+            select(Listing, Match, SavedListing, RawListing.source_url)
+            .join(RawListing, Listing.raw_listing_id == RawListing.id)
+            .outerjoin(
+                Match,
+                (Match.listing_id == Listing.id) & (Match.user_id == current_user.id),
+            )
+            .outerjoin(
+                SavedListing,
+                (SavedListing.listing_id == Listing.id) & (SavedListing.user_id == current_user.id),
+            )
         )
-        .outerjoin(
-            SavedListing,
-            (SavedListing.listing_id == Listing.id) & (SavedListing.user_id == current_user.id),
+    else:
+        query = (
+            select(Listing, RawListing.source_url)
+            .join(RawListing, Listing.raw_listing_id == RawListing.id)
         )
-    )
 
     if remote_only is not None:
         query = query.where(Listing.remote_ok == remote_only)
@@ -51,86 +56,137 @@ async def get_opportunity_feed(
     if company:
         query = query.where(Listing.company.ilike(f"%{company}%"))
 
-    # Order by Match display_score descending, then listing created_at descending
-    query = query.order_by(desc(Match.display_score), desc(Listing.created_at)).offset(offset).limit(limit)
+    if current_user:
+        query = query.order_by(desc(Match.display_score), desc(Listing.created_at)).offset(offset).limit(limit)
+    else:
+        query = query.order_by(desc(Listing.created_at)).offset(offset).limit(limit)
 
     res = await db.execute(query)
     rows = res.all()
 
     items = []
-    for listing, match, saved, source_url in rows:
-        items.append(
-            OpportunityFeedItem(
-                id=listing.id,
-                title=listing.title,
-                company=listing.company,
-                location=listing.location,
-                remote_ok=listing.remote_ok,
-                stipend=listing.stipend,
-                required_skills=listing.required_skills or [],
-                experience_level=listing.experience_level,
-                deadline=listing.deadline,
-                match_score=match.display_score if match else None,
-                match_explanation=match.justification if match else None,
-                is_saved=saved is not None,
-                source_url=source_url,
+    if current_user:
+        for listing, match, saved, source_url in rows:
+            items.append(
+                OpportunityFeedItem(
+                    id=listing.id,
+                    title=listing.title,
+                    company=listing.company,
+                    location=listing.location,
+                    remote_ok=listing.remote_ok,
+                    stipend=listing.stipend,
+                    required_skills=listing.required_skills or [],
+                    experience_level=listing.experience_level,
+                    deadline=listing.deadline,
+                    match_score=match.display_score if match else None,
+                    match_explanation=match.justification if match else None,
+                    is_saved=saved is not None,
+                    source_url=source_url,
+                )
             )
-        )
+    else:
+        for listing, source_url in rows:
+            items.append(
+                OpportunityFeedItem(
+                    id=listing.id,
+                    title=listing.title,
+                    company=listing.company,
+                    location=listing.location,
+                    remote_ok=listing.remote_ok,
+                    stipend=listing.stipend,
+                    required_skills=listing.required_skills or [],
+                    experience_level=listing.experience_level,
+                    deadline=listing.deadline,
+                    match_score=None,
+                    match_explanation=None,
+                    is_saved=False,
+                    source_url=source_url,
+                )
+            )
     return items
 
 
 @router.get("/{listing_id}", response_model=OpportunityFeedItem)
 async def get_listing_detail(
     listing_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Retrieves detailed information for a single opportunity.
     """
-    query = (
-        select(Listing, Match, SavedListing, RawListing.source_url)
-        .join(RawListing, Listing.raw_listing_id == RawListing.id)
-        .outerjoin(
-            Match,
-            (Match.listing_id == Listing.id) & (Match.user_id == current_user.id),
+    if current_user:
+        query = (
+            select(Listing, Match, SavedListing, RawListing.source_url)
+            .join(RawListing, Listing.raw_listing_id == RawListing.id)
+            .outerjoin(
+                Match,
+                (Match.listing_id == Listing.id) & (Match.user_id == current_user.id),
+            )
+            .outerjoin(
+                SavedListing,
+                (SavedListing.listing_id == Listing.id) & (SavedListing.user_id == current_user.id),
+            )
+            .where(Listing.id == listing_id)
         )
-        .outerjoin(
-            SavedListing,
-            (SavedListing.listing_id == Listing.id) & (SavedListing.user_id == current_user.id),
+        res = await db.execute(query)
+        row = res.first()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "LISTING_NOT_FOUND", "message": "Listing not found."}},
+            )
+        listing, match, saved, source_url = row
+        return OpportunityFeedItem(
+            id=listing.id,
+            title=listing.title,
+            company=listing.company,
+            location=listing.location,
+            remote_ok=listing.remote_ok,
+            stipend=listing.stipend,
+            required_skills=listing.required_skills or [],
+            experience_level=listing.experience_level,
+            deadline=listing.deadline,
+            match_score=match.display_score if match else None,
+            match_explanation=match.justification if match else None,
+            is_saved=saved is not None,
+            source_url=source_url,
         )
-        .where(Listing.id == listing_id)
-    )
-    res = await db.execute(query)
-    row = res.first()
-    if not row:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "LISTING_NOT_FOUND", "message": "Listing not found."}},
+    else:
+        query = (
+            select(Listing, RawListing.source_url)
+            .join(RawListing, Listing.raw_listing_id == RawListing.id)
+            .where(Listing.id == listing_id)
         )
-
-    listing, match, saved, source_url = row
-    return OpportunityFeedItem(
-        id=listing.id,
-        title=listing.title,
-        company=listing.company,
-        location=listing.location,
-        remote_ok=listing.remote_ok,
-        stipend=listing.stipend,
-        required_skills=listing.required_skills or [],
-        experience_level=listing.experience_level,
-        deadline=listing.deadline,
-        match_score=match.display_score if match else None,
-        match_explanation=match.justification if match else None,
-        is_saved=saved is not None,
-        source_url=source_url,
-    )
+        res = await db.execute(query)
+        row = res.first()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": {"code": "LISTING_NOT_FOUND", "message": "Listing not found."}},
+            )
+        listing, source_url = row
+        return OpportunityFeedItem(
+            id=listing.id,
+            title=listing.title,
+            company=listing.company,
+            location=listing.location,
+            remote_ok=listing.remote_ok,
+            stipend=listing.stipend,
+            required_skills=listing.required_skills or [],
+            experience_level=listing.experience_level,
+            deadline=listing.deadline,
+            match_score=None,
+            match_explanation=None,
+            is_saved=False,
+            source_url=source_url,
+        )
 
 
 @router.post("/search", response_model=List[OpportunityFeedItem])
 async def search_listings(
     request: SemanticSearchRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -150,20 +206,22 @@ async def search_listings(
 
     items = []
     for listing, _ in scored_listings:
-        # Check user match and saved status
-        match_stmt = select(Match).where(
-            Match.listing_id == listing.id,
-            Match.user_id == current_user.id,
-        )
-        match_res = await db.execute(match_stmt)
-        match = match_res.scalar_one_or_none()
+        match = None
+        is_saved = False
+        if current_user:
+            match_stmt = select(Match).where(
+                Match.listing_id == listing.id,
+                Match.user_id == current_user.id,
+            )
+            match_res = await db.execute(match_stmt)
+            match = match_res.scalar_one_or_none()
 
-        saved_stmt = select(SavedListing).where(
-            SavedListing.listing_id == listing.id,
-            SavedListing.user_id == current_user.id,
-        )
-        saved_res = await db.execute(saved_stmt)
-        is_saved = saved_res.scalar_one_or_none() is not None
+            saved_stmt = select(SavedListing).where(
+                SavedListing.listing_id == listing.id,
+                SavedListing.user_id == current_user.id,
+            )
+            saved_res = await db.execute(saved_stmt)
+            is_saved = saved_res.scalar_one_or_none() is not None
 
         items.append(
             OpportunityFeedItem(

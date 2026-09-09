@@ -19,14 +19,6 @@ import {
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
-interface MatchDetail {
-  score: number;
-  display_score: number;
-  justification: string;
-  strengths: string[];
-  gaps: string[];
-}
-
 interface ListingItem {
   id: string;
   title: string;
@@ -37,17 +29,10 @@ interface ListingItem {
   required_skills: string[];
   experience_level: string | null;
   deadline: string | null;
-  source_url: string;
-  created_at: string;
+  source_url: string | null;
+  match_score?: number | null;
+  match_explanation?: string | null;
   is_saved?: boolean;
-  match?: MatchDetail | null;
-}
-
-interface ListingsResponse {
-  total: number;
-  limit: number;
-  offset: number;
-  items: ListingItem[];
 }
 
 export default function DiscoverPage() {
@@ -60,13 +45,13 @@ export default function DiscoverPage() {
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
 
   // Fetch opportunity listings
-  const { data, isLoading, error } = useQuery<ListingsResponse>({
-    queryKey: ["listings", remoteOnly, minFit],
+  const { data, isLoading, error } = useQuery<ListingItem[]>({
+    queryKey: ["listings", remoteOnly],
     queryFn: async () => {
       let endpoint = `/listings?limit=30`;
       if (remoteOnly) endpoint += `&remote_only=true`;
-      if (minFit) endpoint += `&min_fit=${minFit}`;
-      return apiClient<ListingsResponse>(endpoint);
+      const res = await apiClient<ListingItem[] | { items: ListingItem[] }>(endpoint);
+      return Array.isArray(res) ? res : (res?.items || []);
     },
   });
 
@@ -93,7 +78,7 @@ export default function DiscoverPage() {
     }
 
     try {
-      const searchRes = await apiClient<{ count: number; items: ListingItem[] }>(
+      const searchRes = await apiClient<ListingItem[] | { items: ListingItem[] }>(
         "/listings/search",
         {
           method: "POST",
@@ -104,12 +89,8 @@ export default function DiscoverPage() {
           }),
         }
       );
-      queryClient.setQueryData(["listings", remoteOnly, minFit], {
-        total: searchRes.count,
-        limit: 25,
-        offset: 0,
-        items: searchRes.items,
-      });
+      const items = Array.isArray(searchRes) ? searchRes : (searchRes?.items || []);
+      queryClient.setQueryData(["listings", remoteOnly], items);
     } catch {
       // Fallback
     }
@@ -122,6 +103,11 @@ export default function DiscoverPage() {
     const diffTime = deadline.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
+
+  const allItems = Array.isArray(data) ? data : [];
+  const items = minFit
+    ? allItems.filter((i) => (i.match_score ?? 0) >= minFit)
+    : allItems;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-canvas py-8 px-4 sm:px-6">
@@ -212,7 +198,7 @@ export default function DiscoverPage() {
             </div>
 
             <div className="text-secondaryText font-medium">
-              {data ? `${data.items.length} opportunities shown` : "Loading..."}
+              {isLoading ? "Loading..." : `${items.length} opportunities shown`}
             </div>
           </div>
         </div>
@@ -221,30 +207,31 @@ export default function DiscoverPage() {
         {isLoading ? (
           <div className="py-16 text-center space-y-3">
             <div className="w-8 h-8 mx-auto rounded-full border-2 border-accentBlue border-t-transparent animate-spin"></div>
-            <p className="text-xs text-secondaryText font-medium">Calculating semantic fits across opportunities...</p>
+            <p className="text-xs text-secondaryText font-medium">Loading opportunities...</p>
           </div>
         ) : error ? (
           <div className="p-6 bg-surface rounded-card border border-accentRed/30 text-center space-y-2">
             <p className="text-sm font-semibold text-accentRed">Unable to load opportunities</p>
             <p className="text-xs text-secondaryText">Ensure the backend API is running at localhost:8000.</p>
           </div>
-        ) : data && data.items.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="py-16 text-center bg-surface rounded-card border border-softBorder p-8 space-y-3">
             <div className="w-12 h-12 mx-auto rounded-2xl bg-canvas flex items-center justify-center text-secondaryText">
               <Search className="w-6 h-6" />
             </div>
             <h3 className="font-semibold text-base text-primaryText">No matching roles found</h3>
             <p className="text-xs text-secondaryText max-w-md mx-auto">
-              Try broadening your search query, removing the remote filter, or trigger the scraping pipeline from the internal portal.
+              Try broadening your search query or removing filters.
             </p>
           </div>
         ) : (
           <div className="grid gap-4">
-            {data?.items.map((listing) => {
+            {items.map((listing) => {
               const daysRemaining = calculateDaysRemaining(listing.deadline);
               const isClosingSoon = daysRemaining !== null && daysRemaining <= 7 && daysRemaining >= 0;
               const isExpanded = expandedMatchId === listing.id;
-              const matchScore = listing.match?.display_score;
+              const matchScore = listing.match_score;
+              const isSaved = !!listing.is_saved;
 
               return (
                 <div
@@ -270,7 +257,7 @@ export default function DiscoverPage() {
                           </div>
                         ) : (
                           <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-pill text-xs font-medium bg-canvas text-secondaryText border border-softBorder">
-                            <span>Unscored (Upload Resume)</span>
+                            <span>Unscored (Sign in & Upload Resume)</span>
                           </div>
                         )}
 
@@ -313,12 +300,12 @@ export default function DiscoverPage() {
                         onClick={() =>
                           toggleSaveMutation.mutate({
                             listingId: listing.id,
-                            isSaved: !!listing.is_saved,
+                            isSaved,
                           })
                         }
-                        title={listing.is_saved ? "Remove from shortlist" : "Save to shortlist"}
+                        title={isSaved ? "Remove from shortlist" : "Save to shortlist"}
                         className={`p-2.5 rounded-btn border transition-all ${
-                          listing.is_saved
+                          isSaved
                             ? "bg-accentBlue text-white border-accentBlue shadow-2xs"
                             : "bg-surface hover:bg-canvas text-secondaryText hover:text-primaryText border-softBorder"
                         }`}
@@ -326,15 +313,17 @@ export default function DiscoverPage() {
                         <Bookmark className="w-4 h-4" />
                       </button>
 
-                      <a
-                        href={listing.source_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2.5 rounded-btn bg-surface hover:bg-canvas text-secondaryText hover:text-primaryText border border-softBorder transition-all"
-                        title="View original posting"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
+                      {listing.source_url && (
+                        <a
+                          href={listing.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-2.5 rounded-btn bg-surface hover:bg-canvas text-secondaryText hover:text-primaryText border border-softBorder transition-all"
+                          title="View original posting"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
                     </div>
                   </div>
 
@@ -353,7 +342,7 @@ export default function DiscoverPage() {
                   )}
 
                   {/* Match justification accordion */}
-                  {listing.match && (
+                  {listing.match_explanation && (
                     <div className="pt-2 border-t border-softBorder/60">
                       <button
                         onClick={() =>
@@ -366,42 +355,8 @@ export default function DiscoverPage() {
                       </button>
 
                       {isExpanded && (
-                        <div className="mt-3 p-3.5 rounded-btn bg-canvas border border-softBorder text-xs text-secondaryText space-y-2.5">
-                          <p className="leading-relaxed font-normal text-primaryText">
-                            {listing.match.justification}
-                          </p>
-
-                          {listing.match.strengths && listing.match.strengths.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="font-semibold text-accentGreen text-[10px] uppercase tracking-wider">
-                                Key Strengths:
-                              </span>
-                              {listing.match.strengths.map((st) => (
-                                <span
-                                  key={st}
-                                  className="px-2 py-0.5 rounded-btn bg-accentGreen-subtle text-accentGreen font-medium text-[10px]"
-                                >
-                                  {st}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          {listing.match.gaps && listing.match.gaps.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="font-semibold text-secondaryText text-[10px] uppercase tracking-wider">
-                                Potential Gaps:
-                              </span>
-                              {listing.match.gaps.map((gap) => (
-                                <span
-                                  key={gap}
-                                  className="px-2 py-0.5 rounded-btn bg-softBorder/50 text-secondaryText font-medium text-[10px]"
-                                >
-                                  {gap}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                        <div className="mt-3 p-3.5 rounded-btn bg-canvas border border-softBorder text-xs text-primaryText leading-relaxed">
+                          {listing.match_explanation}
                         </div>
                       )}
                     </div>
