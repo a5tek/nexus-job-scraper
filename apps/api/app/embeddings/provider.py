@@ -30,14 +30,19 @@ class LocalEmbeddingProvider(EmbeddingProvider):
 
     def _get_model(self):
         import os
-        if os.environ.get("OFFLINE_EMBEDDINGS") == "1" or settings.APP_ENV == "testing":
+        if (
+            os.environ.get("OFFLINE_EMBEDDINGS") == "1"
+            or settings.APP_ENV == "testing"
+            or settings.EMBEDDING_PROVIDER != "sentence_transformers"
+        ):
             return None
 
         if not self._initialized and not self._force_fallback:
             try:
                 from sentence_transformers import SentenceTransformer
-                self._model = SentenceTransformer(self.model_name)
-                logger.info(f"Loaded SentenceTransformer model: {self.model_name}")
+                # Use local_files_only to prevent network blocking/hangs during HTTP requests
+                self._model = SentenceTransformer(self.model_name, local_files_only=True)
+                logger.info(f"Loaded cached SentenceTransformer model: {self.model_name}")
             except Exception as exc:
                 logger.warning(f"Could not load SentenceTransformer ({exc}). Using deterministic projection.")
                 self._model = None

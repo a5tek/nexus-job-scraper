@@ -13,6 +13,7 @@ router = APIRouter(prefix="/resume", tags=["Resume"])
 
 
 @router.post("", response_model=ResumeResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/upload", response_model=ResumeResponse, status_code=status.HTTP_201_CREATED)
 async def upload_resume(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
@@ -22,7 +23,7 @@ async def upload_resume(
     Uploads a candidate PDF resume.
     Extracts text using PyMuPDF, computes vector embedding, and updates job matches.
     """
-    if not file.filename.lower().endswith(".pdf"):
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": {"code": "INVALID_FILE_TYPE", "message": "Only PDF files are supported."}},
@@ -74,6 +75,8 @@ async def get_resume_status(
     if not resume:
         return ResumeStatusResponse(
             id="",
+            has_active_resume=False,
+            file_name=None,
             processing_status="none",
             is_active=False,
             matches_calculated=0,
@@ -86,8 +89,36 @@ async def get_resume_status(
 
     return ResumeStatusResponse(
         id=resume.id,
+        has_active_resume=True,
+        file_name=resume.file_name,
         processing_status=resume.processing_status,
         is_active=resume.is_active,
         error_message=resume.error_message,
+        matches_calculated=match_count,
+    )
+
+
+@router.post("/match", response_model=ResumeStatusResponse)
+async def rematch_resume(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Forces recalculation of semantic matches across all opportunities for the active resume.
+    """
+    resume = await ResumeRepository.get_active_by_user_id(db, current_user.id)
+    if not resume:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": {"code": "RESUME_NOT_FOUND", "message": "No active resume to match against."}},
+        )
+
+    match_count = await ResumeService.recalculate_matches_for_user(db, current_user.id)
+    return ResumeStatusResponse(
+        id=resume.id,
+        has_active_resume=True,
+        file_name=resume.file_name,
+        processing_status="ready",
+        is_active=True,
         matches_calculated=match_count,
     )

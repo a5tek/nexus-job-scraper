@@ -20,7 +20,9 @@ class ResumeResponse(BaseModel):
 
 class ResumeStatusResponse(BaseModel):
     id: str
+    has_active_resume: bool = False
+    file_name: Optional[str] = None
     processing_status: str  # uploaded, reading, understanding, matching, ready, failed
-    is_active: bool
+    is_active: bool = False
     error_message: Optional[str] = None
     matches_calculated: int = 0

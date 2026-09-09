@@ -63,3 +63,10 @@ class ResumeService:
 
         logger.info(f"Processed resume for user {user_id}: {matches_count} listings matched.")
         return resume, matches_count
+
+    @staticmethod
+    async def recalculate_matches_for_user(db: AsyncSession, user_id: str) -> int:
+        resume = await ResumeRepository.get_active_by_user_id(db, user_id)
+        if not resume:
+            return 0
+        return await MatchingService.recalculate_all_matches_for_resume(db, resume)
