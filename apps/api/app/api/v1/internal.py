@@ -57,3 +57,24 @@ async def list_sources():
         }
         for scraper in scraper_registry.list_all()
     ]
+
+
+class ProcessListingsRequest(BaseModel):
+    batch_size: int = 20
+
+
+@router.post("/process-listings")
+async def process_listings(
+    request: ProcessListingsRequest = ProcessListingsRequest(),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Processes pending raw listings through LLM extraction, validation, and content-addressed cache.
+    Creates or updates normalized listings in the database.
+    """
+    from app.services.extraction_service import ExtractionService
+    return await ExtractionService.process_pending_raw_listings(
+        db=db,
+        batch_size=request.batch_size,
+    )
+
