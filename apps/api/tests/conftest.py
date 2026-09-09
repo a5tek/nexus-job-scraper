@@ -1,3 +1,6 @@
+import os
+os.environ["OFFLINE_EMBEDDINGS"] = "1"
+
 import pytest
 from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport

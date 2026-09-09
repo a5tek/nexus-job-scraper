@@ -1,12 +1,23 @@
 from fastapi import APIRouter
 from app.api.v1.auth import router as auth_router
 from app.api.v1.internal import router as internal_router
+from app.api.v1.listings import router as listings_router
+from app.api.v1.resume import router as resume_router
+from app.api.v1.shortlist import router as shortlist_router
+from app.api.v1.agent import router as agent_router
+from app.api.v1.briefings import router as briefings_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
 # Mount sub-routers
 api_v1_router.include_router(auth_router)
 api_v1_router.include_router(internal_router)
+api_v1_router.include_router(resume_router)
+api_v1_router.include_router(listings_router)
+api_v1_router.include_router(shortlist_router)
+api_v1_router.include_router(agent_router)
+api_v1_router.include_router(briefings_router)
+
 
 
 @api_v1_router.get("/health", tags=["Health"])
