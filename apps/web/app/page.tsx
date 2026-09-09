@@ -3,39 +3,7 @@ import { ArrowRight, Sparkles, Briefcase, FileText, Bot, Play } from "lucide-rea
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-primaryText">
-      {/* Workspace / Context Navigation Header */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-softBorder/60">
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl bg-primaryText text-surface flex items-center justify-center font-bold text-sm tracking-widest shadow-sm">
-            NX
-          </div>
-          <span className="font-display font-bold text-xl tracking-tight text-primaryText">NEXUS</span>
-        </div>
-
-        <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-secondaryText">
-          <Link href="#how-it-works" className="hover:text-primaryText transition-colors">How it works</Link>
-          <Link href="#discover" className="hover:text-primaryText transition-colors">Discover</Link>
-          <Link href="#agent" className="hover:text-primaryText transition-colors">Agent</Link>
-          <Link href="#briefings" className="hover:text-primaryText transition-colors">Briefings</Link>
-        </nav>
-
-        <div className="flex items-center space-x-3">
-          <Link
-            href="/login"
-            className="px-4 py-2 rounded-btn text-sm font-medium hover:bg-softBorder/50 transition-colors"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/discover"
-            className="px-5 py-2.5 rounded-btn bg-accentBlue hover:bg-accentBlue-hover text-white text-sm font-medium shadow-sm transition-all flex items-center space-x-2"
-          >
-            <span>Enter App</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </header>
+    <div className="flex flex-col bg-canvas text-primaryText">
 
       {/* Hero Section */}
       <main className="flex-1 max-w-7xl mx-auto px-6 py-16 md:py-24 flex flex-col lg:flex-row items-center gap-16">
