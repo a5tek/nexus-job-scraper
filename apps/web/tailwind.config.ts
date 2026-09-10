@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,27 +10,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canvas: "#F7F6F2",
-        surface: "#FFFFFF",
-        primaryText: "#302A29",
-        secondaryText: "#77736F",
-        softBorder: "#E7E4DF",
+        canvas: "var(--canvas)",
+        surface: {
+          DEFAULT: "var(--surface)",
+          hover: "var(--surface-hover)",
+        },
+        primaryText: "var(--primary-text)",
+        secondaryText: "var(--secondary-text)",
+        softBorder: "var(--soft-border)",
         accentBlue: {
-          DEFAULT: "#5278F4",
-          hover: "#4164D8",
-          subtle: "#EFF3FE",
+          DEFAULT: "var(--accent-blue)",
+          hover: "var(--accent-blue-hover)",
+          subtle: "var(--accent-blue-subtle)",
         },
         accentGreen: {
-          DEFAULT: "#18B978",
-          subtle: "#E9F8F2",
+          DEFAULT: "var(--accent-green)",
+          subtle: "var(--accent-green-subtle)",
         },
         accentYellow: {
-          DEFAULT: "#F2C94C",
-          subtle: "#FEF9EC",
+          DEFAULT: "var(--accent-yellow)",
+          subtle: "var(--accent-yellow-subtle)",
         },
         accentRed: {
-          DEFAULT: "#E86A6A",
-          subtle: "#FDF0F0",
+          DEFAULT: "var(--accent-red)",
+          subtle: "var(--accent-red-subtle)",
         },
       },
       borderRadius: {
@@ -39,8 +43,8 @@ const config: Config = {
         pill: "9999px",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
-        display: ["Inter Tight", "Inter", "sans-serif"],
+        sans: ["var(--font-sans)", "Inter", "system-ui", "-apple-system", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "sans-serif"],
       },
     },
   },

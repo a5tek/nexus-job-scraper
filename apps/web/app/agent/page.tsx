@@ -113,7 +113,7 @@ export default function AgentPage() {
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-softBorder">
           <div>
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-white border border-softBorder text-xs font-semibold text-secondaryText mb-2 shadow-2xs">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-surface border border-softBorder text-xs font-semibold text-secondaryText mb-2 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-accentBlue" />
               <span>Autonomous Copilot</span>
             </div>

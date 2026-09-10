@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { 
   Compass, 
   Bookmark, 
@@ -9,10 +11,10 @@ import {
   Bot, 
   Headphones, 
   LogOut, 
-  User as UserIcon,
   Sparkles
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -27,22 +29,36 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-surface/85 backdrop-blur-md border-b border-softBorder">
+    <header className="sticky top-0 z-40 w-full bg-surface/85 backdrop-blur-md border-b border-softBorder transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        {/* Brand */}
+        {/* Brand / Logo (Top Left) */}
         <div className="flex items-center space-x-8">
-          <Link href="/" className="flex items-center space-x-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-primaryText text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-sm transition-transform group-hover:scale-105">
-              NX
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display font-bold text-base tracking-tight text-primaryText leading-none">
-                NEXUS
-              </span>
-              <span className="text-[10px] text-secondaryText font-medium tracking-wide">
-                CAREER INTELLIGENCE
-              </span>
-            </div>
+          <Link href="/" className="flex items-center group py-1" aria-label="Nexus Career Intelligence">
+            <motion.div
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              className="flex items-center relative"
+            >
+              {/* Light mode logo */}
+              <Image
+                src="/logo_light_transparent.png"
+                alt="Nexus Career Intelligence"
+                width={160}
+                height={42}
+                priority
+                className="h-8 md:h-9 w-auto object-contain dark:hidden transition-transform"
+              />
+              {/* Dark mode logo */}
+              <Image
+                src="/logo_dark_transparent.png"
+                alt="Nexus Career Intelligence"
+                width={160}
+                height={42}
+                priority
+                className="h-8 md:h-9 w-auto object-contain hidden dark:block transition-transform"
+              />
+            </motion.div>
           </Link>
 
           {/* Nav links */}
@@ -54,22 +70,31 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-3 py-1.5 rounded-btn text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+                  className={`relative px-3 py-1.5 rounded-btn text-xs font-semibold flex items-center space-x-1.5 transition-all ${
                     isActive
-                      ? "bg-accentBlue text-white shadow-xs"
+                      ? "text-white"
                       : "text-secondaryText hover:text-primaryText hover:bg-canvas"
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{item.label}</span>
+                  {isActive && (
+                    <motion.span
+                      layoutId="navbar-active-indicator"
+                      className="absolute inset-0 bg-accentBlue rounded-btn shadow-xs -z-10"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Icon className="w-3.5 h-3.5 relative z-10" />
+                  <span className="relative z-10">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* User state / Auth actions */}
+        {/* User state / Theme toggle / Auth actions */}
         <div className="flex items-center space-x-3">
+          <ThemeToggle />
+
           {user ? (
             <div className="flex items-center space-x-3">
               <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-pill bg-canvas border border-softBorder text-xs">
@@ -80,13 +105,15 @@ export function Navbar() {
                   {user.name}
                 </span>
               </div>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={logout}
                 title="Sign out"
                 className="p-2 rounded-btn text-secondaryText hover:text-accentRed hover:bg-accentRed-subtle transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-              </button>
+              </motion.button>
             </div>
           ) : (
             <div className="flex items-center space-x-2">
@@ -96,13 +123,15 @@ export function Navbar() {
               >
                 Sign in
               </Link>
-              <Link
-                href="/signup"
-                className="px-4 py-1.5 rounded-btn bg-accentBlue hover:bg-accentBlue-hover text-white text-xs font-semibold shadow-xs transition-all flex items-center space-x-1"
-              >
-                <Sparkles className="w-3 h-3" />
-                <span>Sign up</span>
-              </Link>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <Link
+                  href="/signup"
+                  className="px-4 py-1.5 rounded-btn bg-accentBlue hover:bg-accentBlue-hover text-white text-xs font-semibold shadow-xs transition-all flex items-center space-x-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Sign up</span>
+                </Link>
+              </motion.div>
             </div>
           )}
         </div>

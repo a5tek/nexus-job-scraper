@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { ArrowRight, Lock, Mail, User, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
@@ -33,9 +35,30 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6 bg-canvas">
-      <div className="w-full max-w-md bg-surface rounded-card p-8 border border-softBorder shadow-sm space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="w-full max-w-md bg-surface rounded-card p-8 border border-softBorder shadow-sm space-y-6"
+      >
         {/* Header */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3">
+          <Link href="/" className="inline-block">
+            <Image
+              src="/logo_light_transparent.png"
+              alt="Nexus"
+              width={140}
+              height={36}
+              className="h-8 w-auto mx-auto object-contain dark:hidden"
+            />
+            <Image
+              src="/logo_dark_transparent.png"
+              alt="Nexus"
+              width={140}
+              height={36}
+              className="h-8 w-auto mx-auto object-contain hidden dark:block"
+            />
+          </Link>
           <div className="inline-flex items-center space-x-1 px-3 py-1 rounded-pill bg-accentBlue-subtle text-accentBlue text-xs font-semibold">
             <Sparkles className="w-3 h-3" />
             <span>Candidate Workspace</span>
@@ -130,7 +153,7 @@ export default function SignupPage() {
             Sign in here
           </Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

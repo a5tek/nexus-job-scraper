@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Search, 
@@ -115,7 +116,7 @@ export default function DiscoverPage() {
         {/* Header section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-white border border-softBorder text-xs font-semibold text-secondaryText mb-2 shadow-2xs">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-surface border border-softBorder text-xs font-semibold text-secondaryText mb-2 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-accentBlue" />
               <span>Live Semantic Pipeline</span>
             </div>
@@ -226,7 +227,7 @@ export default function DiscoverPage() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {items.map((listing) => {
+            {items.map((listing, index) => {
               const daysRemaining = calculateDaysRemaining(listing.deadline);
               const isClosingSoon = daysRemaining !== null && daysRemaining <= 7 && daysRemaining >= 0;
               const isExpanded = expandedMatchId === listing.id;
@@ -234,9 +235,13 @@ export default function DiscoverPage() {
               const isSaved = !!listing.is_saved;
 
               return (
-                <div
+                <motion.div
                   key={listing.id}
-                  className="bg-surface rounded-card p-6 border border-softBorder hover:border-softBorder/80 transition-all shadow-2xs space-y-4"
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.4) }}
+                  whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                  className="bg-surface rounded-card p-6 border border-softBorder hover:border-softBorder/80 transition-colors shadow-2xs space-y-4"
                 >
                   {/* Top row: match badge, title, save action */}
                   <div className="flex items-start justify-between gap-4">
@@ -361,7 +366,7 @@ export default function DiscoverPage() {
                       )}
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })}
           </div>

@@ -13,6 +13,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+!apps/web/lib/
 parts/
 sdist/
 var/
@@ -37,6 +38,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.tsbuildinfo
 
 # Environment & Secrets
 .env
