@@ -35,18 +35,25 @@ Nexus is a full-stack career intelligence application designed to continuously s
 
 ---
 
-## 🎨 Design System (DESIGN.md Reference)
+## 🎨 Design System & UI Architecture
 
-Nexus adheres to an editorial, warm, approachable visual identity:
-- **Canvas**: Warm off-white (`#F7F6F2`)
-- **Surface**: Pure warm white (`#FFFFFF`)
-- **Primary Text**: Near-black brown (`#302A29`)
-- **Secondary Text**: Muted warm gray (`#77736F`)
-- **Borders**: Subtle warm gray (`#E7E4DF`)
-- **Accent Blue**: Restrained vivid blue (`#5278F4`)
-- **Success Green**: Fresh emerald green (`#18B978`)
-- **Shapes**: Rounded cards (22px radius), pill badges, comfortable buttons (13px radius)
-- **Hierarchy**: High whitespace, low visual noise, progressive disclosure.
+Nexus adheres to a refined editorial aesthetic paired with modern micro-interactions:
+- **Typography Pairing**:
+  - **Body / Interface**: `Plus Jakarta Sans` — Crisp, geometric, high-legibility sans-serif.
+  - **Display / Headings**: `Outfit` — Forward-looking, punchy display font.
+- **Light & Dark Mode**:
+  - **Light Canvas**: `#F7F6F2` | **Light Surface**: `#FFFFFF` | **Light Borders**: `#E7E4DF`
+  - **Dark Canvas**: `#0D1114` | **Dark Surface**: `#151A1E` | **Dark Borders**: `#232C35`
+  - Zero-FOUC inline script and persistent `localStorage` theme state (`nexus-theme`).
+- **Official Brand Logos**:
+  - Mode-responsive brand mark in top-left navigation bar with seamless light/dark mode transitions and high-resolution assets.
+- **Fluid Motion (Framer Motion)**:
+  - Spring-driven navigation indicators (`layoutId="navbar-active-indicator"`).
+  - Staggered hero section reveals, floating interactive preview cards, and animated match badges.
+  - Interactive Sun/Moon theme toggle with rotational and scale micro-interactions.
+- **Shapes & Accents**:
+  - Rounded cards (`rounded-card` 22px), pill badges (`rounded-pill`), buttons (`rounded-btn` 13px).
+  - Restrained accents: Accent Blue (`#5278F4`), Emerald Green (`#18B978`), Amber (`#F2C94C`), Rose (`#E86A6A`).
 
 ---
 
@@ -56,14 +63,16 @@ Nexus adheres to an editorial, warm, approachable visual identity:
 nexus/
 ├── apps/
 │   ├── web/                      # Next.js 15 App Router frontend
-│   │   ├── app/                  # App routes (landing, discover, shortlist, etc.)
-│   │   ├── components/           # Reusable UI primitives & layout shells
-│   │   ├── lib/                  # Utilities, API client, design tokens
+│   │   ├── app/                  # App routes (landing, discover, shortlist, resume, agent, briefings, auth)
+│   │   ├── components/           # UI primitives (Navbar, ThemeToggle)
+│   │   ├── lib/                  # Utilities, API client, theme context, auth context
+│   │   ├── public/               # Static assets & dark/light mode transparent logos
+│   │   ├── tailwind.config.ts    # Tailwind with darkMode: "class" and CSS variable theme tokens
 │   │   └── package.json
 │   │
 │   └── api/                      # FastAPI backend application
 │       ├── app/
-│       │   ├── api/v1/           # Versioned API routes (/auth, /resume, /listings, etc.)
+│       │   ├── api/v1/           # Versioned API routes (/auth, /resume, /listings, /shortlist, /agent, /briefings)
 │       │   ├── core/             # Typed settings, security, logging
 │       │   ├── db/               # SQLAlchemy engine, sessionmaker, Base
 │       │   ├── models/           # Domain entity models (User, Listing, Match, etc.)
@@ -119,8 +128,14 @@ python -m pytest tests/test_phase0.py -v
 
 Start the API development server:
 ```bash
+# On Linux/macOS
 uvicorn app.main:app --reload --port 8000
+
+# On Windows PowerShell
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Interactive API documentation will be available at `http://localhost:8000/docs`.
 
 ### 3. Frontend Setup
 
@@ -130,7 +145,7 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:3000` to view the application.
+Visit `http://localhost:3000` to view the application with automatic theme detection, dark mode toggle, and responsive logo branding.
 
 ---
 
@@ -142,7 +157,7 @@ Visit `http://localhost:3000` to view the application.
 - [ ] **Phase 3: LLM Extraction & Validation** (Gemini structured extraction, repair retries, extraction cache)
 - [ ] **Phase 4: Resume Processing & pgvector Embeddings** (PyMuPDF parser, sentence-transformers, cosine similarity)
 - [ ] **Phase 5: Matching, Semantic Search & Shortlist** (Ranked feed, evidence explanations, shortlist persistence)
-- [ ] **Phase 6: Frontend Core Experience** (Global shell, sidebar, discover, filters, cards, detail modal)
+- [x] **Phase 6: Frontend Core Experience** (Global shell, typography pairing, dark/light mode, Framer Motion animations, logo branding, discover, shortlist, resume, agent, briefings, auth)
 - [ ] **Phase 7: Autonomous Agent & Tools** (Function-calling agent loop, scoped database tools, chat UI)
 - [ ] **Phase 8: Celery & Asynchronous Briefings** (Background worker, media adapters, polling lifecycle, player)
 - [ ] **Phase 9: Testing, Security & Evals** (IDOR prevention tests, extraction eval suite, prompt injection defenses)
