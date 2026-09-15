@@ -24,12 +24,13 @@ class GitHubInternshipsScraper(BaseScraper):
 
     @property
     def base_url(self) -> str:
-        return "https://raw.githubusercontent.com/pittcsc/Summer2025-Internships/dev"
+        return "https://raw.githubusercontent.com/SimplifyJobs/Summer2025-Internships/dev"
 
     async def discover_pages(self, max_pages: int = 5) -> List[str]:
-        # Target markdown/HTML tables from repositories
+        # Target markdown/HTML tables from active Simplify repositories
         pages = [
             f"{self.base_url}/README.md",
+            "https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/README.md",
         ]
         return pages[:max_pages]
 
@@ -60,6 +61,10 @@ class GitHubInternshipsScraper(BaseScraper):
             # Split cells
             cells = [c.strip() for c in trimmed.strip("|").split("|")]
             if len(cells) < 3:
+                continue
+
+            # Skip closed postings
+            if "🔒" in trimmed or "closed" in trimmed.lower():
                 continue
 
             # Usually: Company, Role, Location, Links, Date
@@ -112,6 +117,7 @@ class GitHubInternshipsScraper(BaseScraper):
     def parse_html_table(self, html: str, page_url: str) -> List[ListingCandidate]:
         """
         Parses HTML <table> rows when rendered as HTML.
+        Handles Simplify community format with company, role, location, application links, and date.
         """
         soup = BeautifulSoup(html, "html.parser")
         candidates: List[ListingCandidate] = []
@@ -122,16 +128,36 @@ class GitHubInternshipsScraper(BaseScraper):
             if len(cells) < 3 or row.find("th"):
                 continue
 
+            row_text = row.get_text()
+            # Filter out closed positions marked with lock emoji
+            if "🔒" in row_text:
+                continue
+
             company = cells[0].get_text(strip=True)
             role = cells[1].get_text(strip=True)
-            location = cells[2].get_text(strip=True)
+            location = cells[2].get_text(strip=True) if len(cells) > 2 else "Remote"
 
-            link_elem = row.find("a", href=True)
-            source_url = link_elem["href"] if link_elem else page_url
-            source_url = normalize_canonical_url(source_url)
-
-            if not company or not role:
+            if not company or not role or company.lower() in ("company", "name"):
                 continue
+
+            # Extract application URL from application column (cells[3]) if present
+            source_url = None
+            if len(cells) > 3:
+                app_links = cells[3].find_all("a", href=True)
+                for a in app_links:
+                    href = a["href"]
+                    # Prefer direct ATS / company apply links over aggregator profile links
+                    if "simplify.jobs/c/" not in href:
+                        source_url = href
+                        break
+                if not source_url and app_links:
+                    source_url = app_links[0]["href"]
+
+            if not source_url:
+                fallback_link = row.find("a", href=True)
+                source_url = fallback_link["href"] if fallback_link else page_url
+
+            source_url = normalize_canonical_url(source_url)
 
             raw_content = (
                 f"Source: GitHub Tech Internships Aggregator\n"

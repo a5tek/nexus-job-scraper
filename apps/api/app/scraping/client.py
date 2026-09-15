@@ -24,6 +24,24 @@ class PoliteScraperClient:
         self.max_retries = max_retries
         self.rate_limiter = limiter or rate_limiter
         self.robots_manager = robots or robots_manager
+        self._limits = httpx.Limits(max_connections=20, max_keepalive_connections=10)
+        self._client: Optional[httpx.AsyncClient] = None
+
+    async def get_http_client(self) -> httpx.AsyncClient:
+        """Returns or lazily initializes the shared pooled HTTP client."""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                timeout=self.timeout,
+                limits=self._limits,
+                follow_redirects=True,
+            )
+        return self._client
+
+    async def close(self) -> None:
+        """Gracefully closes the connection pool."""
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
 
     async def get(
         self,
@@ -52,37 +70,37 @@ class PoliteScraperClient:
         # Apply per-host rate limiting
         await self.rate_limiter.throttle(url)
 
-        async with httpx.AsyncClient(headers=request_headers, timeout=self.timeout, follow_redirects=True) as client:
-            attempt = 0
-            backoff = 1.0
+        client = await self.get_http_client()
+        attempt = 0
+        backoff = 1.0
 
-            while attempt < self.max_retries:
-                attempt += 1
-                try:
-                    resp = await client.get(url)
+        while attempt < self.max_retries:
+            attempt += 1
+            try:
+                resp = await client.get(url, headers=request_headers)
 
-                    # Handle 429 Too Many Requests or 5xx server errors with backoff
-                    if resp.status_code in (429, 502, 503, 504):
-                        retry_after = resp.headers.get("Retry-After")
-                        delay = float(retry_after) if retry_after and retry_after.isdigit() else backoff
-                        logger.warning(
-                            f"HTTP {resp.status_code} for {url}. Backing off {delay:.1f}s (Attempt {attempt}/{self.max_retries})"
-                        )
-                        await asyncio.sleep(delay)
-                        backoff *= 2.0
-                        continue
-
-                    # Successful or client error (4xx other than 429 should not retry)
-                    return resp
-
-                except (httpx.TimeoutException, httpx.NetworkError) as exc:
+                # Handle 429 Too Many Requests or 5xx server errors with backoff
+                if resp.status_code in (429, 502, 503, 504):
+                    retry_after = resp.headers.get("Retry-After")
+                    delay = float(retry_after) if retry_after and retry_after.isdigit() else backoff
                     logger.warning(
-                        f"Network error requesting {url}: {exc}. Backoff {backoff:.1f}s (Attempt {attempt}/{self.max_retries})"
+                        f"HTTP {resp.status_code} for {url}. Backing off {delay:.1f}s (Attempt {attempt}/{self.max_retries})"
                     )
-                    if attempt >= self.max_retries:
-                        logger.error(f"Exhausted retries for {url}: {exc}")
-                        return None
-                    await asyncio.sleep(backoff)
+                    await asyncio.sleep(delay)
                     backoff *= 2.0
+                    continue
+
+                # Successful or client error (4xx other than 429 should not retry)
+                return resp
+
+            except (httpx.TimeoutException, httpx.NetworkError) as exc:
+                logger.warning(
+                    f"Network error requesting {url}: {exc}. Backoff {backoff:.1f}s (Attempt {attempt}/{self.max_retries})"
+                )
+                if attempt >= self.max_retries:
+                    logger.error(f"Exhausted retries for {url}: {exc}")
+                    return None
+                await asyncio.sleep(backoff)
+                backoff *= 2.0
 
         return None

@@ -33,14 +33,18 @@ class YCJobsScraper(BaseScraper):
         ]
         return pages[:max_pages]
 
+    def __init__(self, client=None, use_browser: bool = False):
+        super().__init__(client=client, use_browser=use_browser)
+
     def parse_html_content(self, html: str, page_url: str) -> List[ListingCandidate]:
         """
         Parses card-based HTML structures into ListingCandidate objects.
+        Validates real elements without injecting fabricated default data.
         """
         soup = BeautifulSoup(html, "html.parser")
         candidates: List[ListingCandidate] = []
 
-        # Find card containers (supports common startup board layouts)
+        # Find card containers (supports startup board layouts and client-rendered cards)
         cards = soup.select(".job-card, .company-job-listing, .job-listing, [data-testid='job-card']")
         
         # If standard classes aren't matched, try semantic article/card elements
@@ -49,13 +53,21 @@ class YCJobsScraper(BaseScraper):
 
         for card in cards:
             try:
-                # Title
+                # Title - mandatory
                 title_elem = card.select_one("h2, h3, h4, .job-title, [class*='title']")
-                raw_title = title_elem.get_text(strip=True) if title_elem else "Software Engineer"
+                if not title_elem:
+                    continue
+                raw_title = title_elem.get_text(strip=True)
+                if not raw_title or len(raw_title) < 2:
+                    continue
 
-                # Company
+                # Company - mandatory
                 company_elem = card.select_one(".company-name, [class*='company'], [class*='Company']")
-                company = company_elem.get_text(strip=True) if company_elem else "YC Startup"
+                if not company_elem:
+                    continue
+                company = company_elem.get_text(strip=True)
+                if not company or len(company) < 2:
+                    continue
 
                 # Location / Remote
                 location_elem = card.select_one(".location, [class*='location'], .tags")
@@ -98,6 +110,14 @@ class YCJobsScraper(BaseScraper):
         return candidates
 
     async def scrape_page(self, page_url: str) -> List[ListingCandidate]:
+        if self.use_browser and self.browser_client:
+            html = await self.browser_client.get_rendered_content(
+                page_url,
+                wait_selector=".job-card, .company-job-listing, [data-testid='job-card']",
+            )
+            if html:
+                return self.parse_html_content(html, page_url)
+
         resp = await self.client.get(page_url, check_robots=True)
         if not resp or resp.status_code != 200:
             logger.warning(f"Could not fetch {page_url} (status: {resp.status_code if resp else 'No response'})")

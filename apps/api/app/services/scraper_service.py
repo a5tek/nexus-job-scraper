@@ -62,9 +62,10 @@ class ScraperService:
         completed_at = datetime.now(timezone.utc)
         duration = round(time.time() - start_time, 2)
 
+        actual_pages = getattr(scraper, "last_scraped_pages_count", max_pages)
         summary = ScrapeSummary(
             source_name=scraper.source_name,
-            pages_scraped=max_pages,
+            pages_scraped=actual_pages,
             listings_found=len(candidates),
             inserted_count=inserted,
             updated_count=updated,

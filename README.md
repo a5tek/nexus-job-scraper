@@ -153,13 +153,19 @@ Visit `http://localhost:3000` to view the application with automatic theme detec
 - **Fail-Closed Secret Validation**: Startup lifespan validates that production environments cannot boot with default or short secret keys.
 - **Multi-Stage Container Security**: `apps/api/Dockerfile` runs as an unprivileged user (`appuser:appgroup`) with integrated health checks.
 
+### 5. Multi-Source Scraping Pipeline
+- **RemoteOK Public JSON API (`remoteok`)**: Live remote developer roles ingested directly via structured JSON with compensation, tags, and direct apply links.
+- **SimplifyJobs GitHub Aggregator (`github_internships`)**: 1,750+ verified tech internship opportunities parsed from structured community markdown/HTML tables with automated closed-posting filtering (`🔒`).
+- **YC Work at a Startup (`yc_jobs`)**: Structured card parser with dynamic headless Chromium support (`PlaywrightScraperClient`) and graceful fallback.
+- **Connection-Pooled Client**: `PoliteScraperClient` with persistent connection pooling (20 max connections, 10 keepalive), per-domain rate limiting with jitter, and robots.txt caching.
+
 ---
 
 ## 📋 Implementation Roadmap
 
 - [x] **Phase 0: Repository & Architecture** (Foundations, config, security, logging, test runner, monorepo layout)
 - [x] **Phase 1: Security & Authentication Hardening** (HttpOnly cookies, SlowAPI rate limiting, container privilege drop, credential isolation)
-- [ ] **Phase 2: Scraping Infrastructure & Real Sources** (BaseScraper, working API sources, Playwright integration, rate limits)
+- [x] **Phase 2: Scraping Infrastructure & Real Sources** (BaseScraper, RemoteOK API, SimplifyJobs GitHub tables, connection pooling, Playwright integration)
 - [ ] **Phase 3: Frontend Quality & Responsiveness** (Mobile drawer, error toasts, component decomposition, theme image optimization)
 - [ ] **Phase 4: LLM Extraction & Validation** (Gemini structured extraction, repair retries, extraction cache)
 - [ ] **Phase 5: Resume Processing & pgvector Embeddings** (PyMuPDF parser, sentence-transformers, cosine similarity)

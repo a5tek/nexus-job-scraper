@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 from app.scraping.base import BaseScraper
 from app.scraping.sources.yc_jobs import YCJobsScraper
 from app.scraping.sources.github_jobs import GitHubInternshipsScraper
+from app.scraping.sources.remoteok_jobs import RemoteOKScraper
 
 
 class ScraperRegistry:
@@ -14,6 +15,7 @@ class ScraperRegistry:
         # Register default sources
         self.register(YCJobsScraper())
         self.register(GitHubInternshipsScraper())
+        self.register(RemoteOKScraper())
 
     def register(self, scraper: BaseScraper) -> None:
         self._scrapers[scraper.source_key] = scraper

@@ -109,11 +109,19 @@ def test_yc_jobs_card_parser():
     assert c2.company_hint == "Nexus Labs"
     assert c2.source_url == "https://nexuslabs.com/careers/intern"
 
+    # Test malformed card rejection (no fabricated data)
+    malformed_html = """
+    <div class="job-card">
+        <div>Missing all mandatory headers</div>
+    </div>
+    """
+    assert len(scraper.parse_html_content(malformed_html, "https://example.com")) == 0
+
 
 def test_github_internships_markdown_and_html_table_parser():
     scraper = GitHubInternshipsScraper()
     
-    # 1. Test Markdown table
+    # 1. Test Markdown table with active and closed (🔒) rows
     sample_md = """
 # Tech Internships 2026
 
@@ -121,6 +129,7 @@ def test_github_internships_markdown_and_html_table_parser():
 |---|---|---|---|---|
 | **[Anthropic](https://anthropic.com)** | [Research Intern](https://anthropic.com/jobs/123?utm_source=tracker) | San Francisco, CA | [Apply](https://anthropic.com/jobs/123?utm_source=tracker) | Sep 01 |
 | Datadog | Software Engineer Intern | Remote, US | [Apply](https://datadog.com/jobs/456) | Sep 05 |
+| ClosedCorp | Closed Intern Role | New York, NY | 🔒 Closed | Sep 06 |
     """
     md_candidates = scraper.parse_markdown_table(sample_md, "https://github.com/repo/README.md")
     assert len(md_candidates) == 2
@@ -130,11 +139,11 @@ def test_github_internships_markdown_and_html_table_parser():
     assert md_candidates[1].company_hint == "Datadog"
     assert md_candidates[1].raw_title == "Software Engineer Intern"
 
-    # 2. Test HTML table
+    # 2. Test HTML table with closed row filtering
     sample_html = """
     <table>
         <thead>
-            <tr><th>Company</th><th>Role</th><th>Location</th><th>Link</th></tr>
+            <tr><th>Company</th><th>Role</th><th>Location</th><th>Application</th></tr>
         </thead>
         <tbody>
             <tr>
@@ -142,6 +151,12 @@ def test_github_internships_markdown_and_html_table_parser():
                 <td>Infrastructure Intern</td>
                 <td>Seattle, WA</td>
                 <td><a href="https://stripe.com/jobs/789">Apply Here</a></td>
+            </tr>
+            <tr>
+                <td>OldCo</td>
+                <td>Closed Role</td>
+                <td>Remote</td>
+                <td>🔒 Closed</td>
             </tr>
         </tbody>
     </table>
@@ -151,6 +166,57 @@ def test_github_internships_markdown_and_html_table_parser():
     assert html_candidates[0].company_hint == "Stripe"
     assert html_candidates[0].raw_title == "Infrastructure Intern"
     assert html_candidates[0].source_url == "https://stripe.com/jobs/789"
+
+
+@pytest.mark.asyncio
+async def test_remoteok_scraper_parser():
+    from app.scraping.sources.remoteok_jobs import RemoteOKScraper
+    scraper = RemoteOKScraper()
+    assert scraper.source_key == "remoteok"
+    assert scraper.source_name == "RemoteOK"
+
+    # Mock response format of RemoteOK JSON API
+    mock_payload = [
+        {"legal": "RemoteOK API disclaimer and terms of service"},
+        {
+            "id": "12345",
+            "company": "Acme Remote Cloud",
+            "position": "Senior Backend Python Engineer",
+            "location": "Worldwide / Remote",
+            "tags": ["python", "fastapi", "postgres"],
+            "description": "<p>We are seeking a <b>talented</b> senior backend developer.</p>",
+            "apply_url": "https://acme.com/careers/python-engineer",
+            "salary_min": 130000,
+            "salary_max": 160000,
+        },
+        {
+            "id": "12346",
+            # Missing company and title - should be discarded
+            "company": "",
+            "position": "",
+        },
+    ]
+
+    class MockResponse:
+        status_code = 200
+        def json(self):
+            return mock_payload
+
+    class MockClient:
+        async def get(self, url, headers=None, check_robots=True):
+            return MockResponse()
+
+    scraper.client = MockClient()
+    candidates = await scraper.scrape_page("https://remoteok.com/api")
+    assert len(candidates) == 1
+    c = candidates[0]
+    assert c.source_name == "RemoteOK"
+    assert c.company_hint == "Acme Remote Cloud"
+    assert c.raw_title == "Senior Backend Python Engineer"
+    assert c.source_listing_id == "12345"
+    assert c.source_url == "https://acme.com/careers/python-engineer"
+    assert "Salary: $130,000 - $160,000" in c.raw_content
+    assert "fastapi" in c.raw_content
 
 
 @pytest.mark.asyncio
@@ -208,7 +274,8 @@ async def test_internal_sources_endpoint(client: AsyncClient):
     res = await client.get("/api/v1/internal/sources")
     assert res.status_code == 200
     data = res.json()
-    assert len(data) >= 2
+    assert len(data) >= 3
     keys = [item["source_key"] for item in data]
     assert "yc_jobs" in keys
     assert "github_internships" in keys
+    assert "remoteok" in keys
