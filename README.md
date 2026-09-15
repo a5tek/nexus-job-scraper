@@ -166,6 +166,12 @@ Visit `http://localhost:3000` to view the application with automatic theme detec
 - **Centralized Types & Strict Typing**: Centralized all TypeScript definitions in `types/index.ts`. Completely eliminated `err: any` and all `: any` occurrences across the entire web application, adopting safe `err: unknown` type narrowing.
 - **Robust API Client**: `apiClient` transparently handles `FormData` file uploads (omits `Content-Type` for browser multipart boundary generation) and JSON payloads with credentials cookie forwarding.
 
+### 7. Infrastructure, Quality & Continuous Integration
+- **GitHub Actions CI/CD Pipeline (`.github/workflows/ci.yml`)**: Fully automated matrix running Ruff code linting, Bandit static security scans, PostgreSQL 16 (pgvector) and Redis service containers with pytest coverage, Vitest frontend component tests, Next.js build verification, and multi-stage Docker build checks.
+- **Frontend Unit Testing**: Installed and configured Vitest + JSDOM + `@testing-library/react` suite. Fast, isolated component tests covering search filtering, opportunity cards, upload dropzone validations, and logo theme reactivity.
+- **Database Connection Pooling & Vector Optimization**: Configured production asyncpg connection pool parameters (`pool_size=10`, `max_overflow=5`, `pool_timeout=30`, `pool_recycle=1800`, `pool_pre_ping=True`) and applied Alembic migration creating HNSW indexes (`vector_cosine_ops`) on `listings.embedding` and `resumes.embedding`.
+- **Dependency & Supply Chain**: Added `asyncpg`, `aiosqlite`, `sentence-transformers`, and `sentry-sdk[fastapi]` to eliminate runtime driver gaps.
+
 ---
 
 ## 📋 Implementation Roadmap
@@ -174,9 +180,8 @@ Visit `http://localhost:3000` to view the application with automatic theme detec
 - [x] **Phase 1: Security & Authentication Hardening** (HttpOnly cookies, SlowAPI rate limiting, container privilege drop, credential isolation)
 - [x] **Phase 2: Scraping Infrastructure & Real Sources** (BaseScraper, RemoteOK API, SimplifyJobs GitHub tables, connection pooling, Playwright integration)
 - [x] **Phase 3: Frontend Quality & Responsiveness** (Mobile drawer, error feedback, component decomposition, theme image optimization, centralized types)
-- [ ] **Phase 4: LLM Extraction & Validation** (Gemini structured extraction, repair retries, extraction cache)
-- [ ] **Phase 5: Resume Processing & pgvector Embeddings** (PyMuPDF parser, sentence-transformers, cosine similarity)
-- [ ] **Phase 6: Matching, Semantic Search & Shortlist** (Ranked feed, evidence explanations, shortlist persistence)
+- [x] **Phase 4: Infrastructure, CI/CD & Testing** (GitHub Actions CI/CD, Vitest suite, pgvector HNSW index, connection pooling, asyncpg)
+- [ ] **Phase 5: Polish & Production Readiness** (Password policy validator, strict CORS, refresh token rotation, observability)
 - [x] **Phase 7: Frontend Core Experience** (Global shell, typography pairing, dark/light mode, Framer Motion animations, logo branding)
 - [ ] **Phase 8: Autonomous Agent & Tools** (Function-calling agent loop, scoped database tools, chat UI)
 - [ ] **Phase 9: Celery & Asynchronous Briefings** (Background worker, media adapters, polling lifecycle, player)
