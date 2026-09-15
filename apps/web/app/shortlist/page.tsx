@@ -15,27 +15,7 @@ import {
   Compass
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
-
-interface SavedListingItem {
-  saved_id: string;
-  saved_at: string;
-  notes: string | null;
-  listing: {
-    id: string;
-    title: string;
-    company: string;
-    location: string | null;
-    remote_ok: boolean | null;
-    stipend: string | null;
-    required_skills: string[];
-    deadline: string | null;
-    source_url: string;
-  };
-  match?: {
-    display_score: number;
-    justification: string;
-  } | null;
-}
+import type { SavedListingItem } from "@/types";
 
 export default function ShortlistPage() {
   const queryClient = useQueryClient();

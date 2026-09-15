@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Lock, Mail, User, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { Logo } from "@/components/Logo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -26,8 +26,12 @@ export default function SignupPage() {
     try {
       await register({ name, email, password });
       router.push("/resume");
-    } catch (err: any) {
-      setError(err.message || "Failed to create account. Please try again.");
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Failed to create account. Please try again.";
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -44,19 +48,11 @@ export default function SignupPage() {
         {/* Header */}
         <div className="text-center space-y-3">
           <Link href="/" className="inline-block">
-            <Image
-              src="/logo_light_transparent.png"
-              alt="Nexus"
+            <Logo
+              priority
               width={140}
               height={36}
-              className="h-8 w-auto mx-auto object-contain dark:hidden"
-            />
-            <Image
-              src="/logo_dark_transparent.png"
-              alt="Nexus"
-              width={140}
-              height={36}
-              className="h-8 w-auto mx-auto object-contain hidden dark:block"
+              className="h-8 w-auto mx-auto object-contain"
             />
           </Link>
           <div className="inline-flex items-center space-x-1 px-3 py-1 rounded-pill bg-accentBlue-subtle text-accentBlue text-xs font-semibold">
@@ -91,7 +87,7 @@ export default function SignupPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Alex Candidate"
+              placeholder="Alex Chen"
               className="w-full px-3.5 py-2.5 rounded-btn bg-canvas border border-softBorder text-sm text-primaryText placeholder:text-secondaryText/60 focus:outline-none focus:ring-2 focus:ring-accentBlue/20 focus:border-accentBlue transition-all"
             />
           </div>
@@ -114,7 +110,7 @@ export default function SignupPage() {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-primaryText flex items-center space-x-1.5">
               <Lock className="w-3.5 h-3.5 text-secondaryText" />
-              <span>Password (min. 8 characters)</span>
+              <span>Password</span>
             </label>
             <input
               type="password"
@@ -139,7 +135,7 @@ export default function SignupPage() {
               </>
             ) : (
               <>
-                <span>Get started</span>
+                <span>Get Started</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -150,7 +146,7 @@ export default function SignupPage() {
         <div className="pt-4 border-t border-softBorder/60 text-center text-xs text-secondaryText">
           Already have an account?{" "}
           <Link href="/login" className="text-accentBlue font-semibold hover:underline">
-            Sign in here
+            Sign in
           </Link>
         </div>
       </motion.div>

@@ -13,27 +13,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
-
-interface ToolCallRecord {
-  tool_name: string;
-  arguments: Record<string, any>;
-  result_summary: string;
-}
-
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  tools_called?: ToolCallRecord[];
-  suggested_follow_ups?: string[];
-  created_at: string;
-}
-
-interface AgentChatResponse {
-  response: string;
-  tools_called: ToolCallRecord[];
-  suggested_follow_ups: string[];
-}
+import type { ChatMessage, AgentChatResponse } from "@/types";
 
 export default function AgentPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -80,11 +60,15 @@ export default function AgentPage() {
       };
       setMessages((prev) => [...prev, assistantMsg]);
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Please make sure you are logged in.";
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         role: "assistant",
-        content: `Error communicating with agent: ${err.message || "Please make sure you are logged in."}`,
+        content: `Error communicating with agent: ${message}`,
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);

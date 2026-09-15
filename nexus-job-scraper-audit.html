@@ -378,34 +378,50 @@
         </div>
 
         <div class="severity-critical p-4 rounded-r mb-4">
-            <strong>FE-002: Broken Mobile Navigation</strong>
-            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/web/components/Navbar.tsx</code> (Line 65)</p>
-            <p class="text-sm mt-1">Navigation links are hidden on smaller screens (<code>hidden md:flex</code>) but no mobile hamburger menu fallback exists. Mobile users literally cannot navigate the application after landing.</p>
+            <strong>FE-001: Complete Abandonment of Server Components</strong>
+            <p class="text-sm mt-1">Every page file uses <code>"use client"</code>, including the landing page (<code>app/page.tsx</code>). This eliminates all benefits of Next.js 14/15's Server Components: no SSR/SSG, no server-side data fetching, no streaming, degraded SEO, and larger JavaScript bundles. The entire app is effectively a client-side SPA with Next.js routing.</p>
+        </div>
+
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r mb-4">
+            <div class="flex items-center justify-between">
+                <strong class="text-green-800">FE-002: Broken Mobile Navigation</strong>
+                <span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">RESOLVED</span>
+            </div>
+            <p class="text-sm mt-1 text-gray-700"><strong>Resolution:</strong> Implemented responsive hamburger toggle (<code>md:hidden</code>) in <code>apps/web/components/Navbar.tsx</code> with animated slide-out menu drawer via Framer Motion <code>AnimatePresence</code>, complete navigation links, user profile badge, auth action links, outside-click and Escape key dismiss.</p>
         </div>
 
         <h3 class="text-xl font-semibold mt-6 mb-3">6.2 High Severity Issues</h3>
 
-        <div class="severity-high p-4 rounded-r mb-4">
-            <strong>FE-003: Monolithic Page Components</strong>
-            <p class="text-sm mt-1"><code>app/discover/page.tsx</code> (370+ lines) and <code>app/resume/page.tsx</code> (380+ lines) mix data fetching, local state, derived state, and massive UI markup. These need decomposition into composable sub-components (<code>ListingCard</code>, <code>UploadDropzone</code>, <code>FilterBar</code>).</p>
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r mb-4">
+            <div class="flex items-center justify-between">
+                <strong class="text-green-800">FE-003: Monolithic Page Components</strong>
+                <span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">RESOLVED</span>
+            </div>
+            <p class="text-sm mt-1 text-gray-700"><strong>Resolution:</strong> Decomposed monolithic views into focused sub-components: <code>ListingCard.tsx</code>, <code>FilterBar.tsx</code>, <code>UploadDropzone.tsx</code>, and <code>ResumeStatus.tsx</code>. Centralized state and props cleanly.</p>
         </div>
 
-        <div class="severity-high p-4 rounded-r mb-4">
-            <strong>FE-004: Silent API Error Handling</strong>
-            <p class="text-sm mt-1"><strong>File:</strong> <code>app/discover/page.tsx</code> (Line 95)</p>
-            <p class="text-sm mt-1">The <code>handleSearch</code> function has an empty <code>catch</code> block. If the search API fails, no error feedback is shown to the user and the UI remains stuck in a loading state.</p>
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r mb-4">
+            <div class="flex items-center justify-between">
+                <strong class="text-green-800">FE-004: Silent API Error Handling</strong>
+                <span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">RESOLVED</span>
+            </div>
+            <p class="text-sm mt-1 text-gray-700"><strong>Resolution:</strong> Replaced empty catch in <code>discover/page.tsx</code> search with visible error alerts and dismissable banners. Added typed error handling with message extraction across all pages and mutations.</p>
         </div>
 
-        <div class="severity-high p-4 rounded-r mb-4">
-            <strong>FE-005: Double Image Loading</strong>
-            <p class="text-sm mt-1"><strong>Files:</strong> <code>login/page.tsx</code>, <code>signup/page.tsx</code>, <code>Navbar.tsx</code></p>
-            <p class="text-sm mt-1">Both light and dark mode logos are loaded in the DOM via <code>next/image</code> and toggled via CSS. The browser downloads both images regardless of active theme, wasting bandwidth.</p>
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r mb-4">
+            <div class="flex items-center justify-between">
+                <strong class="text-green-800">FE-005: Double Image Loading</strong>
+                <span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">RESOLVED</span>
+            </div>
+            <p class="text-sm mt-1 text-gray-700"><strong>Resolution:</strong> Created unified <code>components/Logo.tsx</code> consuming <code>useTheme().resolvedTheme</code> to render only the single required image asset with Next.js <code>priority</code> optimization across <code>Navbar.tsx</code>, <code>login/page.tsx</code>, and <code>signup/page.tsx</code>.</p>
         </div>
 
-        <div class="severity-high p-4 rounded-r mb-4">
-            <strong>FE-006: apiClient Cannot Handle FormData</strong>
-            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/web/lib/api.ts</code> (Line 27)</p>
-            <p class="text-sm mt-1">The API client hardcodes <code>Content-Type: application/json</code>. This breaks file uploads (FormData), forcing <code>resume/page.tsx</code> to implement a custom raw <code>fetch</code> call, duplicating auth token extraction and error handling.</p>
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r mb-4">
+            <div class="flex items-center justify-between">
+                <strong class="text-green-800">FE-006: apiClient Cannot Handle FormData</strong>
+                <span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">RESOLVED</span>
+            </div>
+            <p class="text-sm mt-1 text-gray-700"><strong>Resolution:</strong> Enhanced <code>apps/web/lib/api.ts</code> to detect <code>body instanceof FormData</code> and omit <code>Content-Type: application/json</code> so browsers set correct multipart boundaries. Consolidated resume upload to <code>apiClient</code>.</p>
         </div>
 
         <h3 class="text-xl font-semibold mt-6 mb-3">6.3 Medium Severity Issues</h3>
@@ -415,14 +431,20 @@
             <p class="text-sm mt-1"><code>app/resume/page.tsx</code> uses React Query's <code>refetchInterval: 2000</code> to HTTP-poll the server every 2 seconds to check resume processing status. This is expensive; consider SSE or WebSockets.</p>
         </div>
 
-        <div class="severity-medium p-4 rounded-r mb-4">
-            <strong>FE-008: Widespread <code>any</code> Type Usage</strong>
-            <p class="text-sm mt-1"><code>catch (err: any)</code> is used in login, signup, resume, and agent pages. Should use <code>catch (err: unknown)</code> with <code>instanceof</code> checks.</p>
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r mb-4">
+            <div class="flex items-center justify-between">
+                <strong class="text-green-800">FE-008: Widespread <code>any</code> Type Usage</strong>
+                <span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">RESOLVED</span>
+            </div>
+            <p class="text-sm mt-1 text-gray-700"><strong>Resolution:</strong> Completely eliminated all <code>catch (err: any)</code> and <code>: any</code> across the entire web application, adopting <code>catch (err: unknown)</code> with type narrowing and typed error data records.</p>
         </div>
 
-        <div class="severity-medium p-4 rounded-r mb-4">
-            <strong>FE-009: Inline/Duplicated Type Definitions</strong>
-            <p class="text-sm mt-1">Interfaces like <code>ListingItem</code>, <code>ChatMessage</code>, and <code>BriefingRecord</code> are declared inline within individual page files. These should be centralized in a <code>types/</code> directory to prevent drift and duplication.</p>
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r mb-4">
+            <div class="flex items-center justify-between">
+                <strong class="text-green-800">FE-009: Inline/Duplicated Type Definitions</strong>
+                <span class="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">RESOLVED</span>
+            </div>
+            <p class="text-sm mt-1 text-gray-700"><strong>Resolution:</strong> Centralized all TypeScript interfaces and type definitions (<code>User</code>, <code>ListingItem</code>, <code>SavedListingItem</code>, <code>ResumeStatusResponse</code>, <code>ActiveResumeDetail</code>, <code>ChatMessage</code>, <code>BriefingRecord</code>) in <code>apps/web/types/index.ts</code>.</p>
         </div>
 
         <div class="severity-medium p-4 rounded-r mb-4">
@@ -685,53 +707,54 @@
         </div>
 
         <!-- PHASE 3 -->
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-            <h3 class="text-xl font-bold text-blue-700 mb-4">🔵 Phase 3: Frontend Fixes (Week 3)</h3>
+        <div class="bg-green-50 border border-green-300 rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-green-800">✅ Phase 3: Frontend Fixes & Mobile Navigation — COMPLETED</h3>
+                <span class="bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Status: Done</span>
+            </div>
 
             <div class="mb-4">
-                <p class="font-semibold flex items-center"><span class="step-number">11</span> Add Mobile Navigation</p>
-                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
-                    <li>Open <code>apps/web/components/Navbar.tsx</code></li>
-                    <li>Add a hamburger menu button visible only on small screens (<code>md:hidden</code>)</li>
-                    <li>Create a slide-out drawer or dropdown menu using Framer Motion's <code>AnimatePresence</code></li>
-                    <li>Include all navigation links in the mobile menu</li>
-                    <li>Add a close button and click-outside-to-close behavior</li>
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">11</span> Add Mobile Navigation <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Added responsive hamburger menu button visible exclusively on mobile viewports (<code>md:hidden</code>) in <code>apps/web/components/Navbar.tsx</code>.</li>
+                    <li>Implemented animated slide-out navigation drawer with Framer Motion's <code>AnimatePresence</code> and full blur backdrop.</li>
+                    <li>Integrated all main links (Discover, Shortlist, Resume, Agent, Briefings), active state indicators, user identity pill, sign-in, and sign-out controls.</li>
+                    <li>Configured automatic dismissal on route changes, outside click, and Escape key press.</li>
                 </ul>
             </div>
 
             <div class="mb-4">
-                <p class="font-semibold flex items-center"><span class="step-number">12</span> Fix API Client for FormData Support</p>
-                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
-                    <li>Open <code>apps/web/lib/api.ts</code></li>
-                    <li>Check if <code>options.body instanceof FormData</code> — if so, do NOT set <code>Content-Type</code> (let the browser set it with the multipart boundary)</li>
-                    <li>Remove the duplicate fetch implementation in <code>resume/page.tsx</code></li>
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">12</span> Fix API Client for FormData Support <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Refactored <code>apps/web/lib/api.ts</code> to check <code>options.body instanceof FormData</code>, safely omitting manual <code>Content-Type: application/json</code> so browsers set correct multipart boundary headers.</li>
+                    <li>Eliminated duplicate raw <code>fetch</code> calls across all pages; verified all client network requests route through unified <code>apiClient</code> with error parsing and credentials support.</li>
                 </ul>
             </div>
 
             <div class="mb-4">
-                <p class="font-semibold flex items-center"><span class="step-number">13</span> Fix Silent Error Handling</p>
-                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
-                    <li>Search all page files for empty <code>catch</code> blocks</li>
-                    <li>In each catch block, set an error state variable and display a user-friendly error toast or inline error message</li>
-                    <li>In <code>auth-context.tsx</code>, modify <code>refreshUser</code> to only clear the token on 401/403 errors, not on network errors or 5xx responses</li>
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">13</span> Fix Silent Error Handling <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Replaced silent empty catch block in <code>app/discover/page.tsx</code> with tracked <code>searchError</code> state and user-facing dismissable error alert.</li>
+                    <li>Audited all page files and mutations; converted all error catches to <code>catch (err: unknown)</code> with safe message extraction (<code>err instanceof Error ? err.message : ...</code>).</li>
+                    <li>Verified <code>auth-context.tsx</code> <code>refreshUser</code> only purges auth on 401/403 status, preventing disruptive logouts on transient server/network blips.</li>
                 </ul>
             </div>
 
             <div class="mb-4">
-                <p class="font-semibold flex items-center"><span class="step-number">14</span> Decompose Monolithic Page Components</p>
-                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
-                    <li>Create a <code>components/</code> directory structure: <code>components/listings/ListingCard.tsx</code>, <code>components/listings/FilterBar.tsx</code>, <code>components/resume/UploadDropzone.tsx</code>, <code>components/resume/ResumeStatus.tsx</code></li>
-                    <li>Extract inline types to <code>apps/web/types/index.ts</code></li>
-                    <li>Migrate from <code>catch (err: any)</code> to <code>catch (err: unknown)</code> with proper type narrowing</li>
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">14</span> Decompose Monolithic Page Components <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Created centralized TypeScript definitions in <code>apps/web/types/index.ts</code> for <code>ListingItem</code>, <code>SavedListingItem</code>, <code>ResumeStatusResponse</code>, <code>ActiveResumeDetail</code>, <code>ChatMessage</code>, and <code>BriefingRecord</code>.</li>
+                    <li>Created <code>components/listings/ListingCard.tsx</code> and <code>components/listings/FilterBar.tsx</code>, drastically simplifying <code>discover/page.tsx</code>.</li>
+                    <li>Created <code>components/resume/UploadDropzone.tsx</code> and <code>components/resume/ResumeStatus.tsx</code>, decomposing <code>resume/page.tsx</code> into maintainable units.</li>
+                    <li>Completely eliminated <code>err: any</code> and all <code>: any</code> annotations across all web components.</li>
                 </ul>
             </div>
 
             <div class="mb-4">
-                <p class="font-semibold flex items-center"><span class="step-number">15</span> Fix Double Image Loading</p>
-                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
-                    <li>In <code>Navbar.tsx</code>, <code>login/page.tsx</code>, and <code>signup/page.tsx</code>, read the current theme from the ThemeContext</li>
-                    <li>Conditionally render only the appropriate logo based on the active theme, instead of loading both and hiding one via CSS</li>
-                    <li>Use Next.js <code>&lt;Image priority /&gt;</code> for the visible logo to optimize LCP</li>
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">15</span> Fix Double Image Loading <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Created reusable <code>apps/web/components/Logo.tsx</code> consuming <code>resolvedTheme</code> from <code>ThemeContext</code>.</li>
+                    <li>Replaced simultaneous dual-logo rendering in <code>Navbar.tsx</code>, <code>login/page.tsx</code>, and <code>signup/page.tsx</code> with single dynamic <code>&lt;Logo priority /&gt;</code> component, cutting redundant image downloads in half.</li>
                 </ul>
             </div>
         </div>

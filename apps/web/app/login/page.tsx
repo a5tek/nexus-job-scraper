@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { Logo } from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,8 +25,12 @@ export default function LoginPage() {
     try {
       await login({ email, password });
       router.push("/discover");
-    } catch (err: any) {
-      setError(err.message || "Invalid email or password. Please try again.");
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Invalid email or password. Please try again.";
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -43,19 +47,11 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center space-y-3">
           <Link href="/" className="inline-block">
-            <Image
-              src="/logo_light_transparent.png"
-              alt="Nexus"
+            <Logo
+              priority
               width={140}
               height={36}
-              className="h-8 w-auto mx-auto object-contain dark:hidden"
-            />
-            <Image
-              src="/logo_dark_transparent.png"
-              alt="Nexus"
-              width={140}
-              height={36}
-              className="h-8 w-auto mx-auto object-contain hidden dark:block"
+              className="h-8 w-auto mx-auto object-contain"
             />
           </Link>
           <h1 className="font-display text-2xl font-bold text-primaryText tracking-tight">

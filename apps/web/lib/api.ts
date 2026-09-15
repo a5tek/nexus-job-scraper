@@ -39,14 +39,24 @@ export async function apiClient<T>(
   });
 
   if (!response.ok) {
-    let errorData: any = {};
+    let errorData: Record<string, unknown> = {};
     try {
-      errorData = await response.json();
+      errorData = (await response.json()) as Record<string, unknown>;
     } catch {
       // Non-JSON response
     }
-    const message = errorData?.error?.message || errorData?.detail || response.statusText || "Request failed";
-    const code = errorData?.error?.code || `HTTP_${response.status}`;
+    const errorObj =
+      typeof errorData?.error === "object" && errorData.error !== null
+        ? (errorData.error as Record<string, unknown>)
+        : null;
+    const message =
+      (typeof errorObj?.message === "string" ? errorObj.message : null) ||
+      (typeof errorData?.detail === "string" ? errorData.detail : null) ||
+      response.statusText ||
+      "Request failed";
+    const code =
+      (typeof errorObj?.code === "string" ? errorObj.code : null) ||
+      `HTTP_${response.status}`;
     throw new ApiError(message, code, response.status);
   }
 

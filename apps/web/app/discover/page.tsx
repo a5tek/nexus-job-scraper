@@ -1,40 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  Search, 
-  Bookmark, 
-  ExternalLink, 
-  Sparkles, 
-  MapPin, 
-  DollarSign, 
-  Clock, 
-  CheckCircle2, 
-  ChevronDown, 
-  ChevronUp,
-  Globe,
-  SlidersHorizontal
-} from "lucide-react";
+import { Sparkles, Search, AlertCircle } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-
-interface ListingItem {
-  id: string;
-  title: string;
-  company: string;
-  location: string | null;
-  remote_ok: boolean | null;
-  stipend: string | null;
-  required_skills: string[];
-  experience_level: string | null;
-  deadline: string | null;
-  source_url: string | null;
-  match_score?: number | null;
-  match_explanation?: string | null;
-  is_saved?: boolean;
-}
+import { ListingCard } from "@/components/listings/ListingCard";
+import { FilterBar } from "@/components/listings/FilterBar";
+import type { ListingItem } from "@/types";
 
 export default function DiscoverPage() {
   const { user } = useAuth();
@@ -44,6 +17,8 @@ export default function DiscoverPage() {
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [minFit, setMinFit] = useState<number | null>(null);
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Fetch opportunity listings
   const { data, isLoading, error } = useQuery<ListingItem[]>({
@@ -52,13 +27,19 @@ export default function DiscoverPage() {
       let endpoint = `/listings?limit=30`;
       if (remoteOnly) endpoint += `&remote_only=true`;
       const res = await apiClient<ListingItem[] | { items: ListingItem[] }>(endpoint);
-      return Array.isArray(res) ? res : (res?.items || []);
+      return Array.isArray(res) ? res : res?.items || [];
     },
   });
 
   // Toggle Shortlist mutation
   const toggleSaveMutation = useMutation({
-    mutationFn: async ({ listingId, isSaved }: { listingId: string; isSaved: boolean }) => {
+    mutationFn: async ({
+      listingId,
+      isSaved,
+    }: {
+      listingId: string;
+      isSaved: boolean;
+    }) => {
       if (isSaved) {
         await apiClient(`/shortlist/${listingId}`, { method: "DELETE" });
       } else {
@@ -73,11 +54,14 @@ export default function DiscoverPage() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSearchError(null);
+
     if (!searchQuery.trim()) {
       queryClient.invalidateQueries({ queryKey: ["listings"] });
       return;
     }
 
+    setIsSearching(true);
     try {
       const searchRes = await apiClient<ListingItem[] | { items: ListingItem[] }>(
         "/listings/search",
@@ -90,19 +74,23 @@ export default function DiscoverPage() {
           }),
         }
       );
-      const items = Array.isArray(searchRes) ? searchRes : (searchRes?.items || []);
+      const items = Array.isArray(searchRes) ? searchRes : searchRes?.items || [];
       queryClient.setQueryData(["listings", remoteOnly], items);
-    } catch {
-      // Fallback
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Search failed. Please check your network and try again.";
+      setSearchError(message);
+    } finally {
+      setIsSearching(false);
     }
   };
 
-  const calculateDaysRemaining = (deadlineStr: string | null): number | null => {
-    if (!deadlineStr) return null;
-    const deadline = new Date(deadlineStr);
-    const today = new Date();
-    const diffTime = deadline.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchError(null);
+    queryClient.invalidateQueries({ queryKey: ["listings"] });
   };
 
   const allItems = Array.isArray(data) ? data : [];
@@ -129,80 +117,34 @@ export default function DiscoverPage() {
           </div>
         </div>
 
-        {/* Search & Filter Bar */}
-        <div className="bg-surface rounded-card p-4 border border-softBorder shadow-xs space-y-4">
-          <form onSubmit={handleSearch} className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-secondaryText absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search semantic concepts (e.g., 'distributed systems Golang', 'AI agents Python')..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-btn bg-canvas border border-softBorder text-sm text-primaryText placeholder:text-secondaryText/60 focus:outline-none focus:ring-2 focus:ring-accentBlue/20 focus:border-accentBlue transition-all"
-              />
-            </div>
+        {/* Search & Filter Bar Subcomponent */}
+        <FilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onSearchSubmit={handleSearch}
+          onClearSearch={handleClearSearch}
+          isSearching={isSearching}
+          remoteOnly={remoteOnly}
+          onToggleRemote={() => setRemoteOnly(!remoteOnly)}
+          minFit={minFit}
+          onSelectMinFit={setMinFit}
+          totalShown={items.length}
+          isLoading={isLoading}
+        />
+
+        {/* Search Error Alert */}
+        {searchError && (
+          <div className="p-4 rounded-card bg-accentRed-subtle border border-accentRed/30 text-accentRed text-xs flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span className="flex-1">{searchError}</span>
             <button
-              type="submit"
-              className="px-5 py-2.5 rounded-btn bg-accentBlue hover:bg-accentBlue-hover text-white text-sm font-semibold shadow-xs transition-all flex items-center space-x-2 shrink-0"
+              onClick={() => setSearchError(null)}
+              className="text-accentRed underline font-semibold ml-2"
             >
-              <span>Search</span>
+              Dismiss
             </button>
-          </form>
-
-          {/* Filter Pills */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-softBorder/60 text-xs">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-secondaryText font-medium flex items-center space-x-1 mr-1">
-                <SlidersHorizontal className="w-3 h-3" />
-                <span>Filters:</span>
-              </span>
-
-              <button
-                type="button"
-                onClick={() => setRemoteOnly(!remoteOnly)}
-                className={`px-3 py-1.5 rounded-pill font-medium transition-all flex items-center space-x-1.5 ${
-                  remoteOnly
-                    ? "bg-accentBlue text-white shadow-2xs"
-                    : "bg-canvas border border-softBorder text-secondaryText hover:text-primaryText"
-                }`}
-              >
-                <Globe className="w-3 h-3" />
-                <span>Remote Only</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMinFit(minFit === 75 ? null : 75)}
-                className={`px-3 py-1.5 rounded-pill font-medium transition-all flex items-center space-x-1.5 ${
-                  minFit === 75
-                    ? "bg-accentGreen text-white shadow-2xs"
-                    : "bg-canvas border border-softBorder text-secondaryText hover:text-primaryText"
-                }`}
-              >
-                <CheckCircle2 className="w-3 h-3" />
-                <span>High Fit (75%+)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMinFit(minFit === 90 ? null : 90)}
-                className={`px-3 py-1.5 rounded-pill font-medium transition-all flex items-center space-x-1.5 ${
-                  minFit === 90
-                    ? "bg-accentGreen text-white shadow-2xs"
-                    : "bg-canvas border border-softBorder text-secondaryText hover:text-primaryText"
-                }`}
-              >
-                <Sparkles className="w-3 h-3" />
-                <span>Elite Fit (90%+)</span>
-              </button>
-            </div>
-
-            <div className="text-secondaryText font-medium">
-              {isLoading ? "Loading..." : `${items.length} opportunities shown`}
-            </div>
           </div>
-        </div>
+        )}
 
         {/* Listings Feed */}
         {isLoading ? (
@@ -227,148 +169,22 @@ export default function DiscoverPage() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {items.map((listing, index) => {
-              const daysRemaining = calculateDaysRemaining(listing.deadline);
-              const isClosingSoon = daysRemaining !== null && daysRemaining <= 7 && daysRemaining >= 0;
-              const isExpanded = expandedMatchId === listing.id;
-              const matchScore = listing.match_score;
-              const isSaved = !!listing.is_saved;
-
-              return (
-                <motion.div
-                  key={listing.id}
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.4) }}
-                  whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                  className="bg-surface rounded-card p-6 border border-softBorder hover:border-softBorder/80 transition-colors shadow-2xs space-y-4"
-                >
-                  {/* Top row: match badge, title, save action */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {matchScore ? (
-                          <div
-                            className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-pill text-xs font-bold ${
-                              matchScore >= 80
-                                ? "bg-accentGreen-subtle text-accentGreen border border-accentGreen/30"
-                                : matchScore >= 60
-                                ? "bg-accentBlue-subtle text-accentBlue border border-accentBlue/30"
-                                : "bg-canvas text-secondaryText border border-softBorder"
-                            }`}
-                          >
-                            <Sparkles className="w-3 h-3" />
-                            <span>{matchScore}% Fit</span>
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-pill text-xs font-medium bg-canvas text-secondaryText border border-softBorder">
-                            <span>Unscored (Sign in & Upload Resume)</span>
-                          </div>
-                        )}
-
-                        {isClosingSoon && (
-                          <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-pill text-xs font-bold bg-accentYellow-subtle text-amber-700 border border-amber-300">
-                            <Clock className="w-3 h-3" />
-                            <span>Closing in {daysRemaining} days</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <h2 className="text-lg font-bold text-primaryText tracking-tight">
-                        {listing.title}
-                      </h2>
-
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-secondaryText font-medium">
-                        <span className="font-semibold text-primaryText">{listing.company}</span>
-                        <span className="flex items-center space-x-1">
-                          <MapPin className="w-3 h-3" />
-                          <span>{listing.location || (listing.remote_ok ? "Remote" : "Not specified")}</span>
-                        </span>
-                        {listing.stipend && (
-                          <span className="flex items-center space-x-1 text-accentGreen font-semibold">
-                            <DollarSign className="w-3 h-3" />
-                            <span>{listing.stipend}</span>
-                          </span>
-                        )}
-                        {listing.deadline && (
-                          <span className="flex items-center space-x-1">
-                            <Clock className="w-3 h-3" />
-                            <span>Due {listing.deadline}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Bookmark action */}
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() =>
-                          toggleSaveMutation.mutate({
-                            listingId: listing.id,
-                            isSaved,
-                          })
-                        }
-                        title={isSaved ? "Remove from shortlist" : "Save to shortlist"}
-                        className={`p-2.5 rounded-btn border transition-all ${
-                          isSaved
-                            ? "bg-accentBlue text-white border-accentBlue shadow-2xs"
-                            : "bg-surface hover:bg-canvas text-secondaryText hover:text-primaryText border-softBorder"
-                        }`}
-                      >
-                        <Bookmark className="w-4 h-4" />
-                      </button>
-
-                      {listing.source_url && (
-                        <a
-                          href={listing.source_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-2.5 rounded-btn bg-surface hover:bg-canvas text-secondaryText hover:text-primaryText border border-softBorder transition-all"
-                          title="View original posting"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Required skills */}
-                  {listing.required_skills && listing.required_skills.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      {listing.required_skills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="px-2.5 py-1 rounded-btn bg-canvas border border-softBorder text-[11px] font-medium text-secondaryText"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Match justification accordion */}
-                  {listing.match_explanation && (
-                    <div className="pt-2 border-t border-softBorder/60">
-                      <button
-                        onClick={() =>
-                          setExpandedMatchId(isExpanded ? null : listing.id)
-                        }
-                        className="text-xs font-semibold text-accentBlue hover:text-accentBlue-hover flex items-center space-x-1 transition-colors"
-                      >
-                        <span>Why you match</span>
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </button>
-
-                      {isExpanded && (
-                        <div className="mt-3 p-3.5 rounded-btn bg-canvas border border-softBorder text-xs text-primaryText leading-relaxed">
-                          {listing.match_explanation}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+            {items.map((listing, index) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                index={index}
+                isExpanded={expandedMatchId === listing.id}
+                onToggleExpand={(id) =>
+                  setExpandedMatchId(expandedMatchId === id ? null : id)
+                }
+                isSaved={!!listing.is_saved}
+                onToggleSave={(listingId, isSaved) =>
+                  toggleSaveMutation.mutate({ listingId, isSaved })
+                }
+                isSaving={toggleSaveMutation.isPending}
+              />
+            ))}
           </div>
         )}
       </div>

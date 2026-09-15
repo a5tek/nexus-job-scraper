@@ -16,29 +16,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
-
-interface BriefingItem {
-  rank: number;
-  listing_id: string;
-  title: string;
-  company: string;
-  location: string | null;
-  match_score: number | null;
-  deadline: string | null;
-}
-
-interface BriefingRecord {
-  id: string;
-  user_id: string;
-  status: string;  // queued, processing, done, failed
-  script: string | null;
-  media_url: string | null;
-  provider: string | null;
-  error_message: string | null;
-  completed_at: string | null;
-  created_at: string;
-  listings: BriefingItem[];
-}
+import type { BriefingRecord } from "@/types";
 
 export default function BriefingsPage() {
   const queryClient = useQueryClient();

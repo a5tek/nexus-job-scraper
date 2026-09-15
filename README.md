@@ -159,6 +159,13 @@ Visit `http://localhost:3000` to view the application with automatic theme detec
 - **YC Work at a Startup (`yc_jobs`)**: Structured card parser with dynamic headless Chromium support (`PlaywrightScraperClient`) and graceful fallback.
 - **Connection-Pooled Client**: `PoliteScraperClient` with persistent connection pooling (20 max connections, 10 keepalive), per-domain rate limiting with jitter, and robots.txt caching.
 
+### 6. Frontend Architecture & Responsiveness
+- **Mobile Navigation Drawer**: Responsive hamburger button (`md:hidden`) with animated slide-out menu drawer powered by Framer Motion `AnimatePresence`, full-screen backdrop, keyboard (`Escape`) and route-change dismiss.
+- **Component Decomposition**: Clean separation of concerns with modular sub-components: `ListingCard` (opportunity badges, match score, deadline countdown, expandable match justification), `FilterBar` (search with live loading and filter toggles), `UploadDropzone` (drag-and-drop validation, size limits), and `ResumeStatus` (stepper progress tracker, recalculate action, parsed text drawer).
+- **Single Theme-Aware Logo Loading**: Replaced redundant dual-image DOM loading with `components/Logo.tsx` consuming `resolvedTheme` to render a single optimized `<Image priority />`, eliminating wasted bandwidth.
+- **Centralized Types & Strict Typing**: Centralized all TypeScript definitions in `types/index.ts`. Completely eliminated `err: any` and all `: any` occurrences across the entire web application, adopting safe `err: unknown` type narrowing.
+- **Robust API Client**: `apiClient` transparently handles `FormData` file uploads (omits `Content-Type` for browser multipart boundary generation) and JSON payloads with credentials cookie forwarding.
+
 ---
 
 ## 📋 Implementation Roadmap
@@ -166,7 +173,7 @@ Visit `http://localhost:3000` to view the application with automatic theme detec
 - [x] **Phase 0: Repository & Architecture** (Foundations, config, security, logging, test runner, monorepo layout)
 - [x] **Phase 1: Security & Authentication Hardening** (HttpOnly cookies, SlowAPI rate limiting, container privilege drop, credential isolation)
 - [x] **Phase 2: Scraping Infrastructure & Real Sources** (BaseScraper, RemoteOK API, SimplifyJobs GitHub tables, connection pooling, Playwright integration)
-- [ ] **Phase 3: Frontend Quality & Responsiveness** (Mobile drawer, error toasts, component decomposition, theme image optimization)
+- [x] **Phase 3: Frontend Quality & Responsiveness** (Mobile drawer, error feedback, component decomposition, theme image optimization, centralized types)
 - [ ] **Phase 4: LLM Extraction & Validation** (Gemini structured extraction, repair retries, extraction cache)
 - [ ] **Phase 5: Resume Processing & pgvector Embeddings** (PyMuPDF parser, sentence-transformers, cosine similarity)
 - [ ] **Phase 6: Matching, Semantic Search & Shortlist** (Ranked feed, evidence explanations, shortlist persistence)
