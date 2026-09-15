@@ -38,11 +38,23 @@ class ListingRepository:
     ) -> Listing:
         existing = await ListingRepository.get_by_raw_listing_id(db, raw_listing_id)
 
+        from app.core.sanitizer import (
+            clean_company,
+            clean_location,
+            clean_title,
+            sanitize_text,
+        )
+
+        title = clean_title(extracted.title)
+        company = clean_company(extracted.company)
+        location = clean_location(extracted.location)
+        stipend = sanitize_text(extracted.stipend)
+
         # Build embedding text and generate embedding
         embed_text = build_listing_embedding_text(
-            title=extracted.title,
-            company=extracted.company,
-            location=extracted.location,
+            title=title,
+            company=company,
+            location=location,
             remote_ok=extracted.remote_ok,
             experience_level=extracted.experience_level,
             required_skills=extracted.required_skills,
@@ -51,11 +63,11 @@ class ListingRepository:
         vector = embedding_provider.embed_text(embed_text)
 
         if existing:
-            existing.title = extracted.title or "Software Engineer"
-            existing.company = extracted.company or "Company"
-            existing.location = extracted.location
+            existing.title = title
+            existing.company = company
+            existing.location = location
             existing.remote_ok = extracted.remote_ok
-            existing.stipend = extracted.stipend
+            existing.stipend = stipend
             existing.required_skills = extracted.required_skills
             existing.experience_level = extracted.experience_level
             existing.deadline = extracted.deadline
@@ -67,11 +79,11 @@ class ListingRepository:
 
         new_listing = Listing(
             raw_listing_id=raw_listing_id,
-            title=extracted.title or "Software Engineer",
-            company=extracted.company or "Company",
-            location=extracted.location,
+            title=title,
+            company=company,
+            location=location,
             remote_ok=extracted.remote_ok,
-            stipend=extracted.stipend,
+            stipend=stipend,
             required_skills=extracted.required_skills,
             experience_level=extracted.experience_level,
             deadline=extracted.deadline,

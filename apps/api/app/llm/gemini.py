@@ -98,72 +98,87 @@ class GeminiProvider(LLMProvider):
     def _offline_heuristic_json(self, prompt: str) -> Dict[str, Any]:
         """
         Deterministic offline heuristic extractor.
-        Ensures local testing and CI pass without mandatory third-party network credentials.
+        Uses rich domain taxonomy, tag normalization, and text sanitization.
         """
-        # Search for company
+        from app.core.sanitizer import (
+            clean_company,
+            clean_location,
+            clean_title,
+            extract_tech_skills,
+            sanitize_text,
+        )
+
+        # 1. Search for company
         company = None
         comp_match = re.search(r"Company:\s*([^\n\r<]+)", prompt, re.IGNORECASE)
         if comp_match:
-            company = comp_match.group(1).strip()
+            company = clean_company(comp_match.group(1).strip())
 
-        # Search for title
+        # 2. Search for title
         title = None
         title_match = re.search(r"(?:Title|Role|Raw Title Hint):\s*([^\n\r<]+)", prompt, re.IGNORECASE)
         if title_match:
-            title = title_match.group(1).strip()
-        elif "Engineer" in prompt or "Intern" in prompt:
-            # Pick line containing Engineer or Intern
+            title = clean_title(title_match.group(1).strip())
+        else:
+            # Search prompt lines for role keywords
             for line in prompt.splitlines():
-                if ("engineer" in line.lower() or "intern" in line.lower()) and len(line) < 80:
-                    title = line.strip(" -*#:")
+                l_lower = line.lower()
+                if any(kw in l_lower for kw in ("engineer", "intern", "developer", "architect", "analyst", "designer")) and len(line) < 80:
+                    title = clean_title(line.strip(" -*#:;"))
                     break
 
-        # Search for location
-        location = "Remote" if "remote" in prompt.lower() else None
+        title = title or "Software Engineer"
+        company = company or "Technology Startup"
+
+        # 3. Search for location
+        location = "Remote"
         loc_match = re.search(r"Location:\s*([^\n\r<]+)", prompt, re.IGNORECASE)
         if loc_match:
-            location = loc_match.group(1).strip()
+            location = clean_location(loc_match.group(1).strip())
 
         remote_ok = True if (location and "remote" in location.lower()) or "remote" in prompt.lower() else False
 
-        # Common skills dictionary search
-        common_skills = [
-            "Python", "Go", "Kubernetes", "Docker", "PostgreSQL", "FastAPI",
-            "React", "Next.js", "TypeScript", "JavaScript", "Rust", "C++",
-            "Java", "AWS", "Kafka", "Redis", "GraphQL", "gRPC", "SQL", "Linux"
-        ]
-        found_skills = [s for s in common_skills if re.search(rf"\b{re.escape(s)}\b", prompt, re.IGNORECASE)]
+        # 4. Extract tags if present
+        tags: List[str] = []
+        tags_match = re.search(r"Tags:\s*([^\n\r<]+)", prompt, re.IGNORECASE)
+        if tags_match:
+            tags = [t.strip() for t in tags_match.group(1).split(",") if t.strip()]
 
-        # Experience level
-        exp = None
-        if "intern" in prompt.lower():
+        # 5. Extract rich technical skills
+        found_skills = extract_tech_skills(prompt, tags=tags, title=title)
+
+        # 6. Experience level
+        exp = "Mid Level"
+        p_lower = prompt.lower()
+        t_lower = title.lower()
+        if "intern" in t_lower or "intern" in p_lower:
             exp = "Intern"
-        elif "senior" in prompt.lower():
+        elif "lead" in t_lower or "principal" in t_lower or "staff" in t_lower:
+            exp = "Lead"
+        elif "senior" in t_lower or "senior" in p_lower:
             exp = "Senior"
-        elif "junior" in prompt.lower() or "entry level" in prompt.lower():
+        elif "junior" in t_lower or "entry level" in t_lower or "associate" in t_lower:
             exp = "Entry Level"
-        else:
-            exp = "Mid Level"
 
-        # Stipend
+        # 7. Stipend
         stipend = None
-        stipend_match = re.search(r"(?:₹|\$|USD|INR)\s*[\d,]+(?:\s*(?:k|/mo|/yr|per month|per year))?", prompt, re.IGNORECASE)
+        stipend_match = re.search(r"(?:₹|\$|USD|INR)\s*[\d,]+(?:\s*(?:k|/mo|/yr|per month|per year|- (?:₹|\$|USD|INR)?\s*[\d,]+(?:\s*(?:k|/mo|/yr|per month|per year))?))?", prompt, re.IGNORECASE)
         if stipend_match:
-            stipend = stipend_match.group(0).strip()
+            stipend = sanitize_text(stipend_match.group(0).strip())
 
-        # Deadline
+        # 8. Deadline
         deadline = None
         deadline_match = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", prompt)
         if deadline_match:
             deadline = deadline_match.group(1)
 
         return {
-            "title": title or "Software Engineer",
-            "company": company or "Technology Startup",
-            "location": location or "Remote",
+            "title": title,
+            "company": company,
+            "location": location,
             "remote_ok": remote_ok,
             "stipend": stipend,
-            "required_skills": found_skills or ["Python", "SQL"],
+            "required_skills": found_skills,
             "experience_level": exp,
             "deadline": deadline,
         }

@@ -19,12 +19,37 @@ class ExtractedListing(BaseModel):
     )
     deadline: Optional[date] = Field(default=None, description="Application deadline as ISO date")
 
-    @field_validator("title", "company", "location", "stipend", "experience_level", mode="before")
+    @field_validator("title", mode="before")
+    @classmethod
+    def clean_title_field(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        from app.core.sanitizer import clean_title
+        return clean_title(str(v))
+
+    @field_validator("company", mode="before")
+    @classmethod
+    def clean_company_field(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        from app.core.sanitizer import clean_company
+        return clean_company(str(v))
+
+    @field_validator("location", mode="before")
+    @classmethod
+    def clean_location_field(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        from app.core.sanitizer import clean_location
+        return clean_location(str(v))
+
+    @field_validator("stipend", "experience_level", mode="before")
     @classmethod
     def clean_strings(cls, v: Any) -> Optional[str]:
         if v is None:
             return None
-        text = str(v).strip()
+        from app.core.sanitizer import sanitize_text
+        text = sanitize_text(str(v))
         if not text or text.lower() in ("null", "none", "n/a", "unknown", "undefined"):
             return None
         return text

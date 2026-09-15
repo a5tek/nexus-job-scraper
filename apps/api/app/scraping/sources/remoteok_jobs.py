@@ -51,29 +51,43 @@ class RemoteOKScraper(BaseScraper):
 
         candidates: List[ListingCandidate] = []
 
+        from app.core.sanitizer import (
+            clean_company,
+            clean_location,
+            clean_title,
+            is_tech_role,
+            sanitize_text,
+        )
+
         # Skip index 0 as RemoteOK serves legal metadata in the first element
         for job in items[1:]:
             if not isinstance(job, dict):
                 continue
 
-            company = (job.get("company") or "").strip()
-            title = (job.get("position") or "").strip()
-            if not company or not title:
+            raw_company = (job.get("company") or "").strip()
+            raw_title = (job.get("position") or "").strip()
+            if not raw_company or not raw_title:
                 continue
 
-            job_id = str(job.get("id")) if job.get("id") else None
-            location = (job.get("location") or "Remote").strip()
-            apply_url = job.get("apply_url") or job.get("url") or f"{self.base_url}/remote-jobs/{job_id}"
-            source_url = normalize_canonical_url(apply_url)
-
-            tags = job.get("tags") or []
-            tags_str = ", ".join(tags) if isinstance(tags, list) else str(tags)
+            tags = [str(t).strip() for t in (job.get("tags") or []) if t]
             description = (job.get("description") or "").strip()
-            # Clean basic HTML tags from description if present
             if "<" in description:
                 from bs4 import BeautifulSoup
                 description = BeautifulSoup(description, "html.parser").get_text(separator=" ", strip=True)
+            description = sanitize_text(description) or ""
 
+            # Filter strictly for tech-related opportunities
+            if not is_tech_role(title=raw_title, tags=tags, description=description):
+                continue
+
+            company = clean_company(raw_company)
+            title = clean_title(raw_title)
+            job_id = str(job.get("id")) if job.get("id") else None
+            location = clean_location(job.get("location"))
+            apply_url = job.get("apply_url") or job.get("url") or f"{self.base_url}/remote-jobs/{job_id}"
+            source_url = normalize_canonical_url(apply_url)
+
+            tags_str = ", ".join(tags)
             salary_min = job.get("salary_min")
             salary_max = job.get("salary_max")
             salary_str = f"Salary: ${salary_min:,} - ${salary_max:,}" if salary_min and salary_max else ""

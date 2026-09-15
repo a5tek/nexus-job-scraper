@@ -45,8 +45,16 @@ class ExtractionService:
         failed_count = 0
         cache_hits = 0
 
+        from app.core.sanitizer import is_tech_role
+
         for raw in pending_listings:
             try:
+                # Filter out non-tech listings
+                if not is_tech_role(title=raw.raw_title or "", description=raw.raw_content):
+                    raw.extraction_status = "skipped_non_tech"
+                    await db.commit()
+                    continue
+
                 extracted, hit = await structured_extractor.extract(
                     db=db,
                     raw_content=raw.raw_content,
@@ -59,11 +67,17 @@ class ExtractionService:
                     cache_hits += 1
 
                 if extracted:
+                    if not is_tech_role(title=extracted.title or "", description=raw.raw_content):
+                        raw.extraction_status = "skipped_non_tech"
+                        await db.commit()
+                        continue
+
                     # Persist normalized listing
                     await ListingRepository.upsert_from_extraction(
                         db=db,
                         raw_listing_id=raw.id,
                         extracted=extracted,
+                        raw_content=raw.raw_content,
                     )
                     raw.extraction_status = "extracted"
                     extracted_count += 1
