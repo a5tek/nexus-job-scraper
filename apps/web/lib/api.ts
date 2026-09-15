@@ -22,9 +22,10 @@ export async function apiClient<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("nexus_token") : null;
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
@@ -32,6 +33,7 @@ export async function apiClient<T>(
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint}`;
 
   const response = await fetch(url, {
+    credentials: "include",
     ...options,
     headers,
   });

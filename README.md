@@ -147,18 +147,24 @@ npm run dev
 
 Visit `http://localhost:3000` to view the application with automatic theme detection, dark mode toggle, and responsive logo branding.
 
+### 4. Security & Authentication Architecture
+- **HttpOnly Cookie Authentication**: Session tokens are automatically issued as `HttpOnly`, `SameSite=Lax`, `Secure` (production) cookies, mitigating client-side XSS token theft vectors. Bearer tokens remain supported for backward-compatible headless clients.
+- **Endpoint Rate Limiting**: SlowAPI protection on `/auth/login` (10/min) and `/auth/register` (5/min) to prevent brute-force credential stuffing.
+- **Fail-Closed Secret Validation**: Startup lifespan validates that production environments cannot boot with default or short secret keys.
+- **Multi-Stage Container Security**: `apps/api/Dockerfile` runs as an unprivileged user (`appuser:appgroup`) with integrated health checks.
+
 ---
 
 ## 📋 Implementation Roadmap
 
 - [x] **Phase 0: Repository & Architecture** (Foundations, config, security, logging, test runner, monorepo layout)
-- [ ] **Phase 1: Database & Authentication** (SQLAlchemy models, Alembic migrations, multi-tenant auth, user isolation)
-- [ ] **Phase 2: Scraping Infrastructure** (BaseScraper, two source adapters, robots.txt, rate limits, deduplication)
-- [ ] **Phase 3: LLM Extraction & Validation** (Gemini structured extraction, repair retries, extraction cache)
-- [ ] **Phase 4: Resume Processing & pgvector Embeddings** (PyMuPDF parser, sentence-transformers, cosine similarity)
-- [ ] **Phase 5: Matching, Semantic Search & Shortlist** (Ranked feed, evidence explanations, shortlist persistence)
-- [x] **Phase 6: Frontend Core Experience** (Global shell, typography pairing, dark/light mode, Framer Motion animations, logo branding, discover, shortlist, resume, agent, briefings, auth)
-- [ ] **Phase 7: Autonomous Agent & Tools** (Function-calling agent loop, scoped database tools, chat UI)
-- [ ] **Phase 8: Celery & Asynchronous Briefings** (Background worker, media adapters, polling lifecycle, player)
-- [ ] **Phase 9: Testing, Security & Evals** (IDOR prevention tests, extraction eval suite, prompt injection defenses)
-- [ ] **Phase 10: Production Deployment & Polish** (Dockerization, Railway/Render setup, demo walkthrough)
+- [x] **Phase 1: Security & Authentication Hardening** (HttpOnly cookies, SlowAPI rate limiting, container privilege drop, credential isolation)
+- [ ] **Phase 2: Scraping Infrastructure & Real Sources** (BaseScraper, working API sources, Playwright integration, rate limits)
+- [ ] **Phase 3: Frontend Quality & Responsiveness** (Mobile drawer, error toasts, component decomposition, theme image optimization)
+- [ ] **Phase 4: LLM Extraction & Validation** (Gemini structured extraction, repair retries, extraction cache)
+- [ ] **Phase 5: Resume Processing & pgvector Embeddings** (PyMuPDF parser, sentence-transformers, cosine similarity)
+- [ ] **Phase 6: Matching, Semantic Search & Shortlist** (Ranked feed, evidence explanations, shortlist persistence)
+- [x] **Phase 7: Frontend Core Experience** (Global shell, typography pairing, dark/light mode, Framer Motion animations, logo branding)
+- [ ] **Phase 8: Autonomous Agent & Tools** (Function-calling agent loop, scoped database tools, chat UI)
+- [ ] **Phase 9: Celery & Asynchronous Briefings** (Background worker, media adapters, polling lifecycle, player)
+- [ ] **Phase 10: Production Deployment & CI/CD** (GitHub Actions CI, Docker builds, health checks, demo walkthrough)

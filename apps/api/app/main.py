@@ -4,9 +4,12 @@ import uuid
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from app.api.v1.router import api_v1_router
 from app.core.config import settings
 from app.core.logging import logger, setup_logging
+from app.core.rate_limit import limiter
 
 
 @asynccontextmanager
@@ -14,6 +17,22 @@ async def lifespan(app: FastAPI):
     # Startup
     setup_logging(level="DEBUG" if settings.DEBUG else "INFO")
     logger.info(f"Starting {settings.APP_NAME} in {settings.APP_ENV} environment...")
+
+    # Validate secret key configuration
+    insecure_keys = {
+        "nexus_super_secret_dev_key_change_in_production_32chars!",
+        "nexus_dev_insecure_secret_key_needs_override_32chars!",
+        "changeme",
+        "secret",
+    }
+    if settings.APP_ENV == "production":
+        if not settings.SECRET_KEY or settings.SECRET_KEY in insecure_keys or len(settings.SECRET_KEY) < 32:
+            raise RuntimeError(
+                "CRITICAL SECURITY ERROR: In production, SECRET_KEY must be securely configured and at least 32 characters long."
+            )
+    elif settings.SECRET_KEY in insecure_keys:
+        logger.warning("SECURITY WARNING: Using default development SECRET_KEY. Ensure a strong random key is set for production!")
+
     yield
     # Shutdown
     logger.info(f"Shutting down {settings.APP_NAME}...")
@@ -27,6 +46,10 @@ app = FastAPI(
     redoc_url="/redoc" if settings.DEBUG else None,
     lifespan=lifespan,
 )
+
+# SlowAPI Rate Limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS configuration
 app.add_middleware(

@@ -17,12 +17,16 @@ class AuthService:
             )
 
         hashed_pwd = hash_password(data.password)
-        user = await UserRepository.create(
-            db=db,
-            email=data.email,
-            password_hash=hashed_pwd,
-            name=data.name,
-        )
+        try:
+            user = await UserRepository.create(
+                db=db,
+                email=data.email,
+                password_hash=hashed_pwd,
+                name=data.name,
+            )
+        except Exception:
+            await db.rollback()
+            raise
 
         token = create_access_token(subject=user.id)
         return TokenResponse(

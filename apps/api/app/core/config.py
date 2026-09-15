@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # Security & Auth
-    SECRET_KEY: str = "nexus_super_secret_dev_key_change_in_production_32chars!"
+    SECRET_KEY: str = "nexus_dev_insecure_secret_key_needs_override_32chars!"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
 

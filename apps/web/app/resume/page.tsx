@@ -82,34 +82,17 @@ export default function ResumePage() {
       setUploadError(null);
       setUploadSuccess(null);
 
-      const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("nexus_token") : null);
-      if (!activeToken) {
+      if (!user) {
         throw new Error("You must be signed in to upload a resume. Please sign in or create an account.");
       }
 
       const formData = new FormData();
       formData.append("file", file);
 
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-
-      const res = await fetch(`${API_BASE}/resume/upload`, {
+      return await apiClient<ActiveResumeDetail>("/resume/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${activeToken}`,
-        },
         body: formData,
       });
-
-      if (!res.ok) {
-        let errData: any = {};
-        try {
-          errData = await res.json();
-        } catch {}
-        const msg = errData?.error?.message || errData?.detail || "Failed to upload resume.";
-        throw new Error(msg);
-      }
-
-      return res.json();
     },
     onSuccess: (data) => {
       setSelectedFile(null);

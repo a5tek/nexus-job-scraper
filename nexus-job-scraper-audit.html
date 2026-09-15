@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Job Scraper — Complete Project Audit & Implementation Plan</title>
+    <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+            body { font-size: 11px; }
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; }
+        .severity-critical { background: #FEE2E2; color: #991B1B; border-left: 4px solid #DC2626; }
+        .severity-high { background: #FEF3C7; color: #92400E; border-left: 4px solid #F59E0B; }
+        .severity-medium { background: #DBEAFE; color: #1E40AF; border-left: 4px solid #3B82F6; }
+        .severity-low { background: #F0FDF4; color: #166534; border-left: 4px solid #22C55E; }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #3B82F6; color: white; font-weight: bold; font-size: 14px; margin-right: 8px; flex-shrink: 0; }
+        h1, h2, h3, h4 { page-break-after: avoid; }
+        table { page-break-inside: avoid; }
+        .toc a { text-decoration: none; color: #1E40AF; }
+        .toc a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body class="bg-white text-gray-900 max-w-5xl mx-auto px-8 py-10 leading-relaxed">
+
+    <!-- COVER PAGE -->
+    <div class="text-center py-16 border-b-4 border-blue-600 mb-12">
+        <div class="text-6xl font-bold text-blue-600 mb-2">NEXUS</div>
+        <div class="text-xl text-gray-500 mb-8">Autonomous Career Intelligence Platform</div>
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Complete Project Audit<br>&amp; Implementation Plan</h1>
+        <div class="text-lg text-gray-600 mt-6">
+            <p>Repository: <code class="bg-gray-100 px-2 py-1 rounded">github.com/a5tek/nexus-job-scraper</code></p>
+            <p class="mt-2">Date: September 15, 2026</p>
+            <p class="mt-1 text-sm text-gray-400">Prepared by Antigravity AI Audit Engine</p>
+        </div>
+        <div class="mt-10 grid grid-cols-4 gap-4 max-w-2xl mx-auto text-center">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div class="text-2xl font-bold text-red-600">12</div>
+                <div class="text-xs text-red-700">Critical Issues</div>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div class="text-2xl font-bold text-amber-600">18</div>
+                <div class="text-xs text-amber-700">High Issues</div>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div class="text-2xl font-bold text-blue-600">15</div>
+                <div class="text-xs text-blue-700">Medium Issues</div>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div class="text-2xl font-bold text-green-600">10</div>
+                <div class="text-xs text-green-700">Suggestions</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLE OF CONTENTS -->
+    <div class="toc mb-12 bg-gray-50 rounded-xl p-8 border">
+        <h2 class="text-2xl font-bold mb-4">📋 Table of Contents</h2>
+        <ol class="space-y-2 text-base list-decimal list-inside">
+            <li><a href="#executive-summary">Executive Summary</a></li>
+            <li><a href="#project-overview">Project Overview &amp; Architecture Analysis</a></li>
+            <li><a href="#scraping-audit">Scraping System Audit — Does It Actually Work?</a></li>
+            <li><a href="#security-audit">Security Vulnerability Assessment</a></li>
+            <li><a href="#backend-audit">Backend API Audit (FastAPI / Python)</a></li>
+            <li><a href="#frontend-audit">Frontend Audit (Next.js / React)</a></li>
+            <li><a href="#devops-audit">DevOps &amp; Infrastructure Audit</a></li>
+            <li><a href="#database-audit">Database Design &amp; Performance Audit</a></li>
+            <li><a href="#testing-audit">Testing &amp; Quality Assurance Audit</a></li>
+            <li><a href="#dependency-audit">Dependency &amp; Supply Chain Audit</a></li>
+            <li><a href="#implementation-plan">Step-by-Step Implementation Plan to Fix All Issues</a></li>
+            <li><a href="#scraping-fix">Making Scraping Actually Work — Detailed Guide</a></li>
+            <li><a href="#production-checklist">Production Readiness Checklist</a></li>
+        </ol>
+    </div>
+
+    <!-- ==================== SECTION 1: EXECUTIVE SUMMARY ==================== -->
+    <div class="page-break"></div>
+    <section id="executive-summary" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">1. Executive Summary</h2>
+        
+        <p class="mb-4">Nexus is an ambitious full-stack career intelligence platform that aims to scrape public job boards, normalize listings via LLM extraction, match them to uploaded resumes using vector similarity, and deliver results through an AI agent and video briefings. The codebase demonstrates strong architectural vision but contains <strong>significant implementation gaps, security vulnerabilities, and non-functional scraping</strong> that must be addressed before any production deployment.</p>
+
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r">
+            <p class="font-bold text-red-800">⚠️ KEY FINDING: The scrapers do NOT reliably pull data from real websites.</p>
+            <p class="text-red-700 text-sm mt-1">The YC Jobs scraper targets <code>workatastartup.com</code> which is a JavaScript-rendered SPA — <code>httpx</code> + <code>BeautifulSoup</code> will receive an empty shell. The GitHub Internships scraper targets an outdated repository URL that may have moved or changed format. Neither scraper has been validated against live production pages.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">Key Metrics</h3>
+        <table class="w-full border-collapse border border-gray-300 text-sm">
+            <thead class="bg-gray-100">
+                <tr><th class="border p-2 text-left">Category</th><th class="border p-2 text-left">Status</th><th class="border p-2 text-left">Severity</th></tr>
+            </thead>
+            <tbody>
+                <tr><td class="border p-2">Scraping Functionality</td><td class="border p-2 text-red-600 font-semibold">❌ Non-functional against real sites</td><td class="border p-2">Critical</td></tr>
+                <tr><td class="border p-2">Security (Auth)</td><td class="border p-2 text-red-600 font-semibold">❌ Multiple vulnerabilities</td><td class="border p-2">Critical</td></tr>
+                <tr><td class="border p-2">Docker Security</td><td class="border p-2 text-red-600 font-semibold">❌ Running as root</td><td class="border p-2">Critical</td></tr>
+                <tr><td class="border p-2">Frontend Security</td><td class="border p-2 text-red-600 font-semibold">❌ JWT in localStorage</td><td class="border p-2">Critical</td></tr>
+                <tr><td class="border p-2">Error Handling</td><td class="border p-2 text-amber-600 font-semibold">⚠️ Inconsistent</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2">Test Coverage</td><td class="border p-2 text-amber-600 font-semibold">⚠️ Backend partial, Frontend zero</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2">CI/CD</td><td class="border p-2 text-red-600 font-semibold">❌ Completely absent</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2">Database Migrations</td><td class="border p-2 text-amber-600 font-semibold">⚠️ Hardcoded credentials</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2">Documentation</td><td class="border p-2 text-blue-600 font-semibold">ℹ️ README excellent but inaccurate</td><td class="border p-2">Medium</td></tr>
+                <tr><td class="border p-2">Code Architecture</td><td class="border p-2 text-green-600 font-semibold">✅ Well-structured</td><td class="border p-2">Good</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ==================== SECTION 2: PROJECT OVERVIEW ==================== -->
+    <div class="page-break"></div>
+    <section id="project-overview" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">2. Project Overview &amp; Architecture Analysis</h2>
+
+        <h3 class="text-xl font-semibold mb-3">2.1 Technology Stack</h3>
+        <table class="w-full border-collapse border border-gray-300 text-sm mb-6">
+            <thead class="bg-gray-100"><tr><th class="border p-2">Layer</th><th class="border p-2">Technology</th><th class="border p-2">Status</th></tr></thead>
+            <tbody>
+                <tr><td class="border p-2">Frontend</td><td class="border p-2">Next.js 15, React 19, Tailwind CSS, Framer Motion</td><td class="border p-2 text-green-600">✅ Implemented</td></tr>
+                <tr><td class="border p-2">Backend API</td><td class="border p-2">FastAPI, SQLAlchemy 2.0 (async), Pydantic v2</td><td class="border p-2 text-green-600">✅ Implemented</td></tr>
+                <tr><td class="border p-2">Database</td><td class="border p-2">PostgreSQL 16 + pgvector</td><td class="border p-2 text-green-600">✅ Implemented</td></tr>
+                <tr><td class="border p-2">Queue</td><td class="border p-2">Redis + Celery</td><td class="border p-2 text-amber-600">⚠️ Configured, not functional</td></tr>
+                <tr><td class="border p-2">Scraping</td><td class="border p-2">httpx + BeautifulSoup</td><td class="border p-2 text-red-600">❌ Broken against real sites</td></tr>
+                <tr><td class="border p-2">LLM</td><td class="border p-2">Google Gemini</td><td class="border p-2 text-amber-600">⚠️ Framework exists, untested</td></tr>
+                <tr><td class="border p-2">Embeddings</td><td class="border p-2">sentence-transformers</td><td class="border p-2 text-red-600">❌ Not in dependencies</td></tr>
+                <tr><td class="border p-2">Briefings</td><td class="border p-2">HeyGen/D-ID/ElevenLabs</td><td class="border p-2 text-red-600">❌ Not in dependencies</td></tr>
+            </tbody>
+        </table>
+
+        <h3 class="text-xl font-semibold mb-3">2.2 Architecture Assessment</h3>
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>Missing Claimed Components:</strong> The README describes a system using Playwright, sentence-transformers, and media generation SDKs (HeyGen, D-ID, ElevenLabs). None of these libraries exist in <code>requirements.txt</code> or <code>pyproject.toml</code>. The README is aspirational, not factual.
+        </div>
+        
+        <h4 class="font-semibold mt-4 mb-2">What is Actually Implemented (Phase 0 + Partial Phase 2 + Phase 6):</h4>
+        <ul class="list-disc list-inside space-y-1 text-sm">
+            <li>✅ FastAPI application skeleton with lifespan management, CORS, middleware</li>
+            <li>✅ SQLAlchemy async database with Alembic migration framework</li>
+            <li>✅ JWT authentication (register/login) with bcrypt hashing</li>
+            <li>✅ Base scraper pattern with 2 source adapters (YC Jobs, GitHub Internships)</li>
+            <li>✅ Robots.txt compliance, rate limiting, URL canonicalization, deduplication</li>
+            <li>✅ Scrape summary statistics and raw listing upsert pipeline</li>
+            <li>✅ Complete Next.js frontend with dark/light mode, Framer Motion animations</li>
+            <li>✅ 8 backend test files covering scraping, auth, and extraction</li>
+        </ul>
+
+        <h4 class="font-semibold mt-4 mb-2">What is NOT Implemented (despite README claims):</h4>
+        <ul class="list-disc list-inside space-y-1 text-sm text-red-700">
+            <li>❌ Indeed, LinkedIn, Glassdoor scrapers (no <code>adapters/</code> directory exists)</li>
+            <li>❌ Playwright browser automation (not in dependencies)</li>
+            <li>❌ sentence-transformers embeddings (not in dependencies)</li>
+            <li>❌ HeyGen / D-ID / ElevenLabs media generation (not in dependencies)</li>
+            <li>❌ Celery background worker tasks (workers/__init__.py is empty)</li>
+            <li>❌ Semantic matching with explanation generation</li>
+            <li>❌ CI/CD pipeline</li>
+            <li>❌ Frontend testing (zero tests)</li>
+        </ul>
+    </section>
+
+    <!-- ==================== SECTION 3: SCRAPING AUDIT ==================== -->
+    <div class="page-break"></div>
+    <section id="scraping-audit" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">3. Scraping System Audit — Does It Actually Work?</h2>
+
+        <div class="severity-critical p-4 rounded-r mb-6">
+            <strong>VERDICT: The scraping system does NOT reliably pull data from real websites.</strong>
+        </div>
+
+        <h3 class="text-xl font-semibold mb-3">3.1 YC Jobs Scraper (<code>yc_jobs.py</code>)</h3>
+        <table class="w-full border-collapse border border-gray-300 text-sm mb-4">
+            <tr><td class="border p-2 font-semibold bg-gray-50 w-40">Target</td><td class="border p-2"><code>https://www.workatastartup.com/jobs</code></td></tr>
+            <tr><td class="border p-2 font-semibold bg-gray-50">Method</td><td class="border p-2">httpx GET → BeautifulSoup HTML parsing</td></tr>
+            <tr><td class="border p-2 font-semibold bg-gray-50">Works?</td><td class="border p-2 text-red-600 font-bold">NO</td></tr>
+        </table>
+        
+        <h4 class="font-semibold mt-4 mb-2">Issues Found:</h4>
+        <ol class="list-decimal list-inside space-y-3 text-sm">
+            <li>
+                <strong>JavaScript-Rendered SPA (Critical):</strong> <code>workatastartup.com</code> is a React single-page application. When <code>httpx</code> fetches the page, it receives a minimal HTML shell with a <code>&lt;div id="root"&gt;&lt;/div&gt;</code> and JavaScript bundles. <code>BeautifulSoup</code> cannot parse job cards that are rendered client-side. The CSS selectors (<code>.job-card</code>, <code>.company-job-listing</code>) will match zero elements.
+            </li>
+            <li>
+                <strong>Hardcoded Fallback Values (Medium):</strong> Line 54 falls back to <code>"Software Engineer"</code> when no title is found. Line 58 falls back to <code>"YC Startup"</code> when no company is found. This means if the parser partially works, it produces fabricated data that looks real.
+            </li>
+            <li>
+                <strong>Overly Generic CSS Selectors (Medium):</strong> Selectors like <code>h2, h3, h4, .job-title, [class*='title']</code> are dangerously broad. They will match navigation elements, sidebar headings, and footer text if any HTML is returned.
+            </li>
+            <li>
+                <strong>No Pagination Handling (Low):</strong> The <code>discover_pages</code> method returns hardcoded URL variants rather than dynamically discovering pagination links.
+            </li>
+        </ol>
+
+        <h3 class="text-xl font-semibold mt-8 mb-3">3.2 GitHub Internships Scraper (<code>github_jobs.py</code>)</h3>
+        <table class="w-full border-collapse border border-gray-300 text-sm mb-4">
+            <tr><td class="border p-2 font-semibold bg-gray-50 w-40">Target</td><td class="border p-2"><code>https://raw.githubusercontent.com/pittcsc/Summer2025-Internships/dev/README.md</code></td></tr>
+            <tr><td class="border p-2 font-semibold bg-gray-50">Method</td><td class="border p-2">httpx GET → Regex-based markdown table parsing</td></tr>
+            <tr><td class="border p-2 font-semibold bg-gray-50">Works?</td><td class="border p-2 text-amber-600 font-bold">PARTIALLY — with significant caveats</td></tr>
+        </table>
+
+        <h4 class="font-semibold mt-4 mb-2">Issues Found:</h4>
+        <ol class="list-decimal list-inside space-y-3 text-sm">
+            <li>
+                <strong>Outdated Repository URL (Critical):</strong> The URL targets <code>pittcsc/Summer2025-Internships</code> on the <code>dev</code> branch. This repository has been restructured and renamed to <code>SimplifyJobs/Summer2025-Internships</code> with a <code>main</code> branch. The current URL will return a 404.
+            </li>
+            <li>
+                <strong>Brittle Regex Parsing (High):</strong> The markdown table parsing relies on exact formatting. The Simplify repo uses emoji (✅, 🔒), nested markdown links, multi-line cells, and collapsed sections (<code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code>) that will break the regex-based parser.
+            </li>
+            <li>
+                <strong>No Content-Type Validation (Medium):</strong> <code>scrape_page</code> checks if <code>&lt;table</code> appears in the raw text to decide between HTML vs markdown parsing. Raw markdown from GitHub will contain literal <code>|</code> pipe characters, and the regex parser will engage, but edge cases (markdown with embedded HTML tables) may confuse the dispatcher.
+            </li>
+        </ol>
+
+        <h3 class="text-xl font-semibold mt-8 mb-3">3.3 Scraping Infrastructure Assessment</h3>
+        
+        <h4 class="font-semibold mb-2">What Works Well:</h4>
+        <ul class="list-disc list-inside space-y-1 text-sm text-green-700">
+            <li>✅ <code>PoliteScraperClient</code> — Well-designed with robots.txt compliance, rate limiting, backoff</li>
+            <li>✅ <code>PerHostRateLimiter</code> — Per-domain throttling with jitter to avoid burst detection</li>
+            <li>✅ <code>RobotsPolicyManager</code> — Properly caches and respects robots.txt per origin</li>
+            <li>✅ <code>normalize_canonical_url</code> — Comprehensive URL canonicalization (strips tracking params, sorts query, removes fragments)</li>
+            <li>✅ <code>compute_dedupe_key</code> — Three-tier deduplication (listing ID → canonical URL → content hash)</li>
+            <li>✅ <code>BaseScraper</code> abstract class — Clean adapter pattern with fault tolerance per page</li>
+            <li>✅ <code>ScraperRegistry</code> — Modular registration system for adding new sources</li>
+        </ul>
+
+        <h4 class="font-semibold mt-4 mb-2">What Doesn't Work:</h4>
+        <ul class="list-disc list-inside space-y-1 text-sm text-red-700">
+            <li>❌ Both actual scraper implementations fail against their real target sites</li>
+            <li>❌ No JavaScript rendering capability (needs Playwright or similar)</li>
+            <li>❌ No anti-bot circumvention (no cookie handling, no browser fingerprinting)</li>
+            <li>❌ No proxy rotation support for rate-limited sites</li>
+            <li>❌ Tests only validate parsers against fabricated HTML, not real site responses</li>
+        </ul>
+    </section>
+
+    <!-- ==================== SECTION 4: SECURITY AUDIT ==================== -->
+    <div class="page-break"></div>
+    <section id="security-audit" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">4. Security Vulnerability Assessment</h2>
+
+        <h3 class="text-xl font-semibold mb-3">4.1 Critical Vulnerabilities</h3>
+        
+        <div class="severity-critical p-4 rounded-r mb-4">
+            <strong>SEC-001: JWT Stored in localStorage (XSS Attack Vector)</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/web/lib/auth-context.tsx</code> (Lines 67, 77) and <code>apps/web/lib/api.ts</code> (Line 24)</p>
+            <p class="text-sm mt-1"><strong>Risk:</strong> Any XSS vulnerability anywhere in the application allows an attacker to steal the JWT token and impersonate any user. localStorage is accessible to all JavaScript on the page.</p>
+            <p class="text-sm mt-1"><strong>Fix:</strong> Migrate to HttpOnly, Secure, SameSite=Lax cookies. The backend should set the cookie, and the frontend should never touch the token directly.</p>
+        </div>
+
+        <div class="severity-critical p-4 rounded-r mb-4">
+            <strong>SEC-002: No Rate Limiting on Authentication Endpoints</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/app/services/auth_service.py</code></p>
+            <p class="text-sm mt-1"><strong>Risk:</strong> The <code>/auth/login</code> and <code>/auth/register</code> endpoints have no rate limiting. An attacker can perform unlimited brute-force credential stuffing attacks. No account lockout after failed attempts.</p>
+            <p class="text-sm mt-1"><strong>Fix:</strong> Add <code>slowapi</code> or a custom rate limiter middleware. Implement account lockout after 5 failed attempts with exponential backoff.</p>
+        </div>
+
+        <div class="severity-critical p-4 rounded-r mb-4">
+            <strong>SEC-003: Hardcoded Secret Key in Source Code</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/app/core/config.py</code> (Line 35)</p>
+            <p class="text-sm mt-1"><strong>Risk:</strong> Default <code>SECRET_KEY = "nexus_super_secret_dev_key_change_in_production_32chars!"</code> is committed to version control. If deployed without changing, all JWTs are signed with a known key.</p>
+            <p class="text-sm mt-1"><strong>Fix:</strong> Remove the default value entirely. Make the key required and fail to start without it. Add startup validation.</p>
+        </div>
+
+        <div class="severity-critical p-4 rounded-r mb-4">
+            <strong>SEC-004: Docker Container Runs as Root</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/Dockerfile</code></p>
+            <p class="text-sm mt-1"><strong>Risk:</strong> No <code>USER</code> directive in the Dockerfile. The application runs as root inside the container. Any container escape vulnerability gives root access to the host.</p>
+            <p class="text-sm mt-1"><strong>Fix:</strong> Add <code>RUN useradd --create-home appuser</code> and <code>USER appuser</code> before CMD.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">4.2 High Severity Vulnerabilities</h3>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>SEC-005: Hardcoded Database Credentials</strong>
+            <p class="text-sm mt-1"><strong>Files:</strong> <code>docker-compose.yml</code> (Lines 9-10, 48-49, 70-71), <code>alembic.ini</code> (Line 36), <code>.env.example</code></p>
+            <p class="text-sm mt-1"><strong>Risk:</strong> Database passwords (<code>postgrespassword</code>) are duplicated across multiple files and committed to version control.</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>SEC-006: 24-Hour JWT Expiry Without Refresh Token Rotation</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/app/core/config.py</code> (Line 37): <code>ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24</code></p>
+            <p class="text-sm mt-1"><strong>Risk:</strong> A stolen token is valid for 24 hours. No refresh token mechanism exists, so there's no way to revoke a compromised session short of rotating the entire SECRET_KEY.</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>SEC-007: CORS Allows All Methods and Headers</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/app/main.py</code> (Lines 36-37): <code>allow_methods=["*"], allow_headers=["*"]</code></p>
+            <p class="text-sm mt-1"><strong>Risk:</strong> Overly permissive CORS configuration. Should restrict to only the HTTP methods and headers actually used (GET, POST, PUT, DELETE + Authorization, Content-Type).</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>SEC-008: Aggressive Logout on Network Error</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/web/lib/auth-context.tsx</code> (Lines 49-52)</p>
+            <p class="text-sm mt-1"><strong>Risk:</strong> The <code>refreshUser</code> function clears localStorage and logs the user out if <code>/auth/me</code> throws any error — including transient 503 errors or network failures. This creates a poor user experience and can be weaponized as a denial-of-service attack by inducing temporary network failures.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">4.3 Medium Severity Issues</h3>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>SEC-009: No Input Validation on Scraper-Sourced Data</strong>
+            <p class="text-sm">Raw HTML content from scrapers is stored directly in the database without sanitization. If this data is ever rendered in the frontend without escaping, it creates a stored XSS vector.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>SEC-010: No CSRF Protection</strong>
+            <p class="text-sm">While JWT bearer tokens provide some CSRF resistance, the frontend uses <code>credentials: true</code> in CORS. If migrated to cookie-based auth, CSRF tokens must be added.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>SEC-011: Password Policy Not Enforced</strong>
+            <p class="text-sm">The registration endpoint accepts any password string. No minimum length, complexity, or common password checks are enforced.</p>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 5: BACKEND AUDIT ==================== -->
+    <div class="page-break"></div>
+    <section id="backend-audit" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">5. Backend API Audit (FastAPI / Python)</h2>
+
+        <h3 class="text-xl font-semibold mb-3">5.1 Code Quality Issues</h3>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>BK-001: ScraperService is a God Class</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/app/services/scraper_service.py</code></p>
+            <p class="text-sm mt-1">This service orchestrates scrapers, manages database persistence (<code>RawListingRepository.upsert_candidate</code>), and computes statistics. It violates the Single Responsibility Principle. Persistence logic should be separated from scraper orchestration.</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>BK-002: Missing Database Transaction Rollbacks</strong>
+            <p class="text-sm mt-1"><strong>Files:</strong> <code>scraper_service.py</code>, <code>auth_service.py</code></p>
+            <p class="text-sm mt-1">Database operations are not wrapped in explicit try/except with <code>await db.rollback()</code>. If an exception occurs mid-transaction, the SQLAlchemy session can become corrupted for subsequent requests using the same connection pool.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>BK-003: Broad Exception Catching</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>scraper_service.py</code> (Line 58)</p>
+            <p class="text-sm mt-1"><code>except Exception as exc</code> catches everything, hiding specific errors like <code>IntegrityError</code> (database constraint violations) vs <code>TimeoutError</code> (network issues). These should be handled differently.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>BK-004: Global Lock Bottleneck in Rate Limiter</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/app/scraping/rate_limiter.py</code> (Line 18)</p>
+            <p class="text-sm mt-1">The <code>_global_lock</code> creates a bottleneck when multiple scrapers target different hosts. Acquiring a host-specific lock requires first acquiring the global lock, serializing all host lock creation operations.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>BK-005: No Graceful Shutdown for Async HTTP Client</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/app/scraping/client.py</code> (Line 55)</p>
+            <p class="text-sm mt-1"><code>PoliteScraperClient</code> creates a new <code>httpx.AsyncClient</code> per request inside an <code>async with</code> block. This prevents connection pooling. A single long-lived client should be initialized during app startup and shared across scraper runs.</p>
+        </div>
+
+        <div class="severity-low p-4 rounded-r mb-4">
+            <strong>BK-006: pages_scraped Reports max_pages, Not Actual Pages</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>scraper_service.py</code> (Line 67)</p>
+            <p class="text-sm mt-1"><code>ScrapeSummary.pages_scraped</code> is set to <code>max_pages</code> rather than the actual number of pages that were successfully scraped. This produces inaccurate metrics.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">5.2 Architecture Observations</h3>
+        <ul class="list-disc list-inside space-y-2 text-sm">
+            <li><strong>Positive:</strong> Clean layered architecture (routes → services → repositories → models) with proper dependency injection via <code>api/deps.py</code>.</li>
+            <li><strong>Positive:</strong> Pydantic v2 schemas for request/response validation with proper model_validate usage.</li>
+            <li><strong>Positive:</strong> Versioned API routes under <code>/api/v1/</code> with a centralized router.</li>
+            <li><strong>Positive:</strong> Request context middleware with request IDs and response timing.</li>
+            <li><strong>Negative:</strong> Workers module (<code>workers/__init__.py</code>) is empty — Celery integration is scaffolded but not implemented.</li>
+            <li><strong>Negative:</strong> Global exception handler (Line 84-97 of main.py) properly sanitizes output, but should differentiate behavior between DEBUG=true and production modes.</li>
+        </ul>
+    </section>
+
+    <!-- ==================== SECTION 6: FRONTEND AUDIT ==================== -->
+    <div class="page-break"></div>
+    <section id="frontend-audit" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">6. Frontend Audit (Next.js / React)</h2>
+
+        <h3 class="text-xl font-semibold mb-3">6.1 Critical Issues</h3>
+
+        <div class="severity-critical p-4 rounded-r mb-4">
+            <strong>FE-001: Complete Abandonment of Server Components</strong>
+            <p class="text-sm mt-1">Every page file uses <code>"use client"</code>, including the landing page (<code>app/page.tsx</code>). This eliminates all benefits of Next.js 14/15's Server Components: no SSR/SSG, no server-side data fetching, no streaming, degraded SEO, and larger JavaScript bundles. The entire app is effectively a client-side SPA with Next.js routing.</p>
+        </div>
+
+        <div class="severity-critical p-4 rounded-r mb-4">
+            <strong>FE-002: Broken Mobile Navigation</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/web/components/Navbar.tsx</code> (Line 65)</p>
+            <p class="text-sm mt-1">Navigation links are hidden on smaller screens (<code>hidden md:flex</code>) but no mobile hamburger menu fallback exists. Mobile users literally cannot navigate the application after landing.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">6.2 High Severity Issues</h3>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>FE-003: Monolithic Page Components</strong>
+            <p class="text-sm mt-1"><code>app/discover/page.tsx</code> (370+ lines) and <code>app/resume/page.tsx</code> (380+ lines) mix data fetching, local state, derived state, and massive UI markup. These need decomposition into composable sub-components (<code>ListingCard</code>, <code>UploadDropzone</code>, <code>FilterBar</code>).</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>FE-004: Silent API Error Handling</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>app/discover/page.tsx</code> (Line 95)</p>
+            <p class="text-sm mt-1">The <code>handleSearch</code> function has an empty <code>catch</code> block. If the search API fails, no error feedback is shown to the user and the UI remains stuck in a loading state.</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>FE-005: Double Image Loading</strong>
+            <p class="text-sm mt-1"><strong>Files:</strong> <code>login/page.tsx</code>, <code>signup/page.tsx</code>, <code>Navbar.tsx</code></p>
+            <p class="text-sm mt-1">Both light and dark mode logos are loaded in the DOM via <code>next/image</code> and toggled via CSS. The browser downloads both images regardless of active theme, wasting bandwidth.</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>FE-006: apiClient Cannot Handle FormData</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/web/lib/api.ts</code> (Line 27)</p>
+            <p class="text-sm mt-1">The API client hardcodes <code>Content-Type: application/json</code>. This breaks file uploads (FormData), forcing <code>resume/page.tsx</code> to implement a custom raw <code>fetch</code> call, duplicating auth token extraction and error handling.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">6.3 Medium Severity Issues</h3>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>FE-007: Inefficient Polling for Resume Processing</strong>
+            <p class="text-sm mt-1"><code>app/resume/page.tsx</code> uses React Query's <code>refetchInterval: 2000</code> to HTTP-poll the server every 2 seconds to check resume processing status. This is expensive; consider SSE or WebSockets.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>FE-008: Widespread <code>any</code> Type Usage</strong>
+            <p class="text-sm mt-1"><code>catch (err: any)</code> is used in login, signup, resume, and agent pages. Should use <code>catch (err: unknown)</code> with <code>instanceof</code> checks.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>FE-009: Inline/Duplicated Type Definitions</strong>
+            <p class="text-sm mt-1">Interfaces like <code>ListingItem</code>, <code>ChatMessage</code>, and <code>BriefingRecord</code> are declared inline within individual page files. These should be centralized in a <code>types/</code> directory to prevent drift and duplication.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>FE-010: SSR Authentication Failure</strong>
+            <p class="text-sm mt-1">The <code>apiClient</code> reads tokens from <code>window.localStorage</code>. If any Server Component attempts authenticated API calls, it will crash since <code>window</code> is undefined during SSR.</p>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 7: DEVOPS AUDIT ==================== -->
+    <div class="page-break"></div>
+    <section id="devops-audit" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">7. DevOps &amp; Infrastructure Audit</h2>
+
+        <h3 class="text-xl font-semibold mb-3">7.1 Dockerfile Issues</h3>
+        <div class="severity-critical p-4 rounded-r mb-4">
+            <strong>DO-001: No Multi-Stage Build</strong>
+            <p class="text-sm mt-1"><code>build-essential</code>, <code>curl</code>, and <code>libpq-dev</code> are installed and remain in the final image. Attack surface is unnecessarily large. Image size is bloated. Should use a builder stage to compile dependencies, then copy only the runtime artifacts to a slim final stage.</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>DO-002: No Health Check in Dockerfile</strong>
+            <p class="text-sm mt-1">While <code>docker-compose.yml</code> has healthchecks for Postgres and Redis, neither the API nor worker Dockerfiles include a <code>HEALTHCHECK</code> instruction.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">7.2 Docker Compose Issues</h3>
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>DO-003: Environment Variable Duplication</strong>
+            <p class="text-sm mt-1">Database URLs are duplicated verbatim between the <code>api</code> and <code>worker</code> services. Should use YAML anchors (<code>x-env</code>) or <code>env_file</code> for DRY configuration.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>DO-004: Redis Port Mismatch</strong>
+            <p class="text-sm mt-1"><code>.env.example</code> sets <code>REDIS_URL=redis://localhost:6339/0</code> (port 6339) but <code>docker-compose.yml</code> exposes Redis on standard port 6379. This will cause connection failures.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>DO-005: Missing Production APP_ENV</strong>
+            <p class="text-sm mt-1"><code>docker-compose.yml</code> hardcodes <code>APP_ENV=production</code> in what is clearly a local development compose file. This could mask debugging issues during development.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">7.3 CI/CD — Completely Missing</h3>
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>DO-006: No CI/CD Pipeline</strong>
+            <p class="text-sm mt-1">There are no <code>.github/workflows</code>, no GitLab CI configs, no automated linting (<code>ruff</code>, <code>eslint</code>), no testing automation, no security scanning (<code>bandit</code>, <code>trivy</code>), and no container image building pipelines.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">7.4 Monitoring — Absent</h3>
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>DO-007: No Monitoring or Alerting</strong>
+            <p class="text-sm mt-1"><code>SENTRY_DSN</code> exists in <code>.env.example</code> but <code>sentry-sdk</code> is not in the dependencies. No Prometheus metrics endpoint. No Celery monitoring (Flower). Docker container logging is not capped, which will cause disk exhaustion.</p>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 8: DATABASE AUDIT ==================== -->
+    <div class="page-break"></div>
+    <section id="database-audit" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">8. Database Design &amp; Performance Audit</h2>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>DB-001: UUIDv4 Primary Keys Cause Index Fragmentation</strong>
+            <p class="text-sm mt-1">All models use random UUIDv4 strings (<code>String(36)</code>). UUIDv4's random distribution causes B-tree index fragmentation, which degrades INSERT performance as tables grow to millions of rows. Recommendation: Use UUIDv7 (time-ordered) or ULID.</p>
+        </div>
+
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>DB-002: Missing pgvector Index for Embedding Search</strong>
+            <p class="text-sm mt-1">The <code>Listing</code> model stores embeddings using <code>CompatibleVector(384)</code>, but no HNSW or IVFFlat index is created for this column. Without a specialized vector index, all nearest-neighbor queries will perform a full table scan.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>DB-003: Alembic Hardcoded Database URL</strong>
+            <p class="text-sm mt-1"><strong>File:</strong> <code>apps/api/alembic.ini</code> (Line 36)</p>
+            <p class="text-sm mt-1"><code>sqlalchemy.url</code> is hardcoded to <code>postgresql://postgres:postgres@localhost:5432/nexus</code>. Should be read from <code>SYNC_DATABASE_URL</code> environment variable dynamically in <code>migrations/env.py</code>.</p>
+        </div>
+
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>DB-004: No Connection Pool Configuration</strong>
+            <p class="text-sm mt-1">The app uses both async (<code>asyncpg</code>) and sync (<code>psycopg2</code>) connections. Neither pool has explicit size limits (<code>pool_size</code>, <code>max_overflow</code>). Under load, this can exhaust PostgreSQL's <code>max_connections</code>.</p>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 9: TESTING AUDIT ==================== -->
+    <div class="page-break"></div>
+    <section id="testing-audit" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">9. Testing &amp; Quality Assurance Audit</h2>
+
+        <h3 class="text-xl font-semibold mb-3">9.1 Backend Tests (Partial)</h3>
+        <p class="mb-4 text-sm">8 test files exist in <code>apps/api/tests/</code>:</p>
+        <table class="w-full border-collapse border border-gray-300 text-sm mb-4">
+            <thead class="bg-gray-100"><tr><th class="border p-2">File</th><th class="border p-2">Coverage</th><th class="border p-2">Quality</th></tr></thead>
+            <tbody>
+                <tr><td class="border p-2"><code>test_scraping.py</code></td><td class="border p-2">URL canonical, dedupe, parsers, upsert</td><td class="border p-2 text-green-600">Good — but tests fabricated HTML, not real sites</td></tr>
+                <tr><td class="border p-2"><code>test_auth_multitenancy.py</code></td><td class="border p-2">Multi-tenant auth isolation</td><td class="border p-2 text-green-600">Good</td></tr>
+                <tr><td class="border p-2"><code>test_phase0.py</code></td><td class="border p-2">Foundation checks</td><td class="border p-2 text-green-600">Good</td></tr>
+                <tr><td class="border p-2"><code>test_extraction.py</code></td><td class="border p-2">LLM extraction pipeline</td><td class="border p-2 text-amber-600">Partial — may require API key</td></tr>
+                <tr><td class="border p-2"><code>test_briefings.py</code></td><td class="border p-2">Briefing generation</td><td class="border p-2 text-amber-600">Partial — requires media API keys</td></tr>
+                <tr><td class="border p-2"><code>test_agent.py</code></td><td class="border p-2">AI agent tools</td><td class="border p-2 text-amber-600">Partial</td></tr>
+                <tr><td class="border p-2"><code>test_resume_semantic_search.py</code></td><td class="border p-2">Resume embeddings</td><td class="border p-2 text-amber-600">Partial — requires sentence-transformers</td></tr>
+            </tbody>
+        </table>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">9.2 Frontend Tests (Absent)</h3>
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>TEST-001: Zero Frontend Tests</strong>
+            <p class="text-sm mt-1">No unit tests (Jest/Vitest), no component tests (React Testing Library), no E2E tests (Cypress/Playwright). This means any change to the frontend can silently break existing functionality.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">9.3 Missing Test Types</h3>
+        <ul class="list-disc list-inside space-y-2 text-sm">
+            <li><strong>Integration tests with real HTTP responses:</strong> Use VCR.py or pytest-recording to capture and replay actual responses from target websites. This catches when site layouts change.</li>
+            <li><strong>IDOR prevention tests:</strong> Verify that User A cannot access User B's data across all endpoints.</li>
+            <li><strong>Prompt injection tests:</strong> Verify that crafted input in scraped job listings cannot manipulate the LLM agent's behavior.</li>
+            <li><strong>Load/stress tests:</strong> Verify the system handles concurrent scraping runs without connection pool exhaustion.</li>
+        </ul>
+    </section>
+
+    <!-- ==================== SECTION 10: DEPENDENCY AUDIT ==================== -->
+    <div class="page-break"></div>
+    <section id="dependency-audit" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">10. Dependency &amp; Supply Chain Audit</h2>
+
+        <h3 class="text-xl font-semibold mb-3">10.1 Missing Dependencies (Python)</h3>
+        <table class="w-full border-collapse border border-gray-300 text-sm mb-4">
+            <thead class="bg-gray-100"><tr><th class="border p-2">Package</th><th class="border p-2">Used By</th><th class="border p-2">Status</th></tr></thead>
+            <tbody>
+                <tr><td class="border p-2"><code>sentence-transformers</code></td><td class="border p-2">Resume embeddings</td><td class="border p-2 text-red-600">❌ Missing</td></tr>
+                <tr><td class="border p-2"><code>playwright</code></td><td class="border p-2">JS-rendered scraping</td><td class="border p-2 text-red-600">❌ Missing</td></tr>
+                <tr><td class="border p-2"><code>sentry-sdk</code></td><td class="border p-2">Error monitoring</td><td class="border p-2 text-red-600">❌ Missing</td></tr>
+                <tr><td class="border p-2"><code>asyncpg</code></td><td class="border p-2">Async PostgreSQL driver</td><td class="border p-2 text-red-600">❌ Missing (required by DATABASE_URL)</td></tr>
+                <tr><td class="border p-2"><code>aiosqlite</code></td><td class="border p-2">Default SQLite async fallback</td><td class="border p-2 text-red-600">❌ Missing</td></tr>
+                <tr><td class="border p-2"><code>slowapi</code></td><td class="border p-2">API rate limiting</td><td class="border p-2 text-amber-600">⚠️ Recommended</td></tr>
+                <tr><td class="border p-2"><code>structlog</code></td><td class="border p-2">Structured logging</td><td class="border p-2 text-amber-600">⚠️ Referenced but not installed</td></tr>
+            </tbody>
+        </table>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">10.2 Unpinned Dependencies</h3>
+        <div class="severity-high p-4 rounded-r mb-4">
+            <strong>DEP-001: Loose Version Pinning</strong>
+            <p class="text-sm mt-1">All dependencies use <code>&gt;=</code> minimum versions without upper bounds (e.g., <code>fastapi&gt;=0.110.0</code>). Two developers running <code>pip install</code> a week apart will get different package versions. Use <code>pip-compile</code>, <code>uv</code>, or <code>poetry.lock</code> for reproducible builds.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">10.3 Frontend Dependency Issues</h3>
+        <div class="severity-medium p-4 rounded-r mb-4">
+            <strong>DEP-002: Bleeding Edge React/Next.js</strong>
+            <p class="text-sm mt-1">Using <code>react ^19.0.0</code> and <code>next ^15.0.0</code>. Ensure third-party libraries (framer-motion v13, react-hook-form v7) are fully compatible. No <code>eslint</code> configuration is set up despite the <code>lint</code> script existing.</p>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 11: IMPLEMENTATION PLAN ==================== -->
+    <div class="page-break"></div>
+    <section id="implementation-plan" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">11. Step-by-Step Implementation Plan to Fix All Issues</h2>
+
+        <p class="mb-6 text-sm text-gray-600">Each step below is organized by priority (Critical → High → Medium → Low). Follow them in order.</p>
+
+        <!-- PHASE 1 -->
+        <div class="bg-green-50 border border-green-300 rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-green-800">✅ Phase 1: Critical Security Fixes — COMPLETED</h3>
+                <span class="bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Status: Done</span>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">1</span> Fix JWT Storage — Migrate from localStorage to HttpOnly Cookies <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Updated <code>apps/api/app/api/v1/auth.py</code> and <code>apps/api/app/services/auth_service.py</code> to set <code>nexus_token</code> HttpOnly cookie on <code>/register</code> and <code>/login</code>, plus implemented <code>POST /auth/logout</code>.</li>
+                    <li>Updated <code>apps/api/app/api/deps.py</code> to resolve authentication from either <code>Authorization: Bearer</code> header or <code>request.cookies.get("nexus_token")</code>.</li>
+                    <li>Updated <code>apps/web/lib/api.ts</code> with <code>credentials: "include"</code> and automatic FormData body detection.</li>
+                    <li>Updated <code>apps/web/lib/auth-context.tsx</code> and <code>apps/web/app/resume/page.tsx</code> to utilize HttpOnly cookie sessions and prevent aggressive logout on transient network errors.</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">2</span> Remove Hardcoded Secret Key Default <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Updated <code>apps/api/app/core/config.py</code> to deprecate committed secret key defaults.</li>
+                    <li>Added strict startup validation in <code>apps/api/app/main.py</code> lifespan to reject insecure keys and enforce >=32 character random secrets in production.</li>
+                    <li>Updated <code>.env.example</code> with generation command: <code>python -c "import secrets; print(secrets.token_hex(32))"</code>.</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">3</span> Add Authentication Rate Limiting <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Added <code>slowapi>=0.1.9</code> to <code>requirements.txt</code>.</li>
+                    <li>Created centralized rate limiter in <code>apps/api/app/core/rate_limit.py</code> using <code>Limiter(key_func=get_remote_address)</code>.</li>
+                    <li>Decorated <code>/auth/login</code> and <code>/auth/register</code> with rate limits and registered SlowAPI exception handler on the FastAPI app.</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">4</span> Secure the Dockerfile <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Refactored <code>apps/api/Dockerfile</code> into a multi-stage build (builder + runtime).</li>
+                    <li>Created dedicated non-root user <code>appuser:appgroup</code> to run the container.</li>
+                    <li>Added native container <code>HEALTHCHECK</code> command for automated container orchestration health monitoring.</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center text-green-900"><span class="step-number bg-green-600">5</span> Fix Hardcoded Database Credentials <span class="ml-2 text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-bold">DONE</span></p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2 text-gray-700">
+                    <li>Parameterized database credentials in <code>docker-compose.yml</code> and centralized common service environment variables using YAML anchors.</li>
+                    <li>Removed hardcoded database credentials from <code>apps/api/alembic.ini</code>; dynamically resolves from <code>SYNC_DATABASE_URL</code>.</li>
+                    <li>Configured standard Redis port 6379 and Docker JSON-file logging limits (10m max-size, 3 max-files).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PHASE 2 -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6">
+            <h3 class="text-xl font-bold text-amber-700 mb-4">🟡 Phase 2: Make Scraping Work (Week 2)</h3>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">6</span> Add Playwright for JavaScript-Rendered Pages</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Add <code>playwright>=1.40.0</code> to <code>requirements.txt</code></li>
+                    <li>Run <code>playwright install chromium</code> after pip install</li>
+                    <li>Create <code>apps/api/app/scraping/browser_client.py</code> with a <code>PlaywrightScraperClient</code> class that launches a headless Chromium browser, navigates to the URL, waits for network idle, and returns the fully rendered DOM</li>
+                    <li>Modify <code>BaseScraper.__init__</code> to accept a <code>use_browser: bool = False</code> flag. When True, use <code>PlaywrightScraperClient</code> instead of <code>PoliteScraperClient</code></li>
+                    <li>Update the Dockerfile to install Chromium dependencies in the builder stage</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">7</span> Fix YC Jobs Scraper to Work with Real Site</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Open <code>apps/api/app/scraping/sources/yc_jobs.py</code></li>
+                    <li>Change the scraper to use the <code>PlaywrightScraperClient</code> (set <code>use_browser=True</code>)</li>
+                    <li>Visit <code>https://www.workatastartup.com/jobs</code> in a real browser, inspect the actual DOM structure using DevTools</li>
+                    <li>Update all CSS selectors to match the actual rendered HTML class names</li>
+                    <li>Remove hardcoded fallback values ("Software Engineer", "YC Startup") — instead, skip cards where mandatory fields (title, company) are missing</li>
+                    <li>Add a wait condition: <code>await page.wait_for_selector("[data-testid='job-card'], .job-listing-card", timeout=10000)</code></li>
+                    <li>Alternatively, investigate if workatastartup.com has an API endpoint (check Network tab in DevTools) and use that directly instead of HTML scraping</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">8</span> Fix GitHub Internships Scraper URL</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Open <code>apps/api/app/scraping/sources/github_jobs.py</code></li>
+                    <li>Update <code>base_url</code> from <code>https://raw.githubusercontent.com/pittcsc/Summer2025-Internships/dev</code> to the current repository URL: <code>https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev</code></li>
+                    <li>Update the markdown table parser to handle: emoji characters (✅, 🔒), collapsed &lt;details&gt;/&lt;summary&gt; sections, multi-line cells, and nested markdown links</li>
+                    <li>Add a filter to skip rows where the application link contains "🔒" (indicating the position is closed)</li>
+                    <li>Add a VCR.py test fixture that records the actual response from the GitHub raw URL and replays it during CI</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">9</span> Add a Third Scraper That Demonstrably Works</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Create <code>apps/api/app/scraping/sources/remoteok_jobs.py</code> targeting <code>https://remoteok.com/api</code></li>
+                    <li>RemoteOK provides a public JSON API — no HTML parsing needed, no JavaScript rendering needed</li>
+                    <li>The API returns JSON arrays of job objects with fields like <code>company</code>, <code>position</code>, <code>location</code>, <code>url</code>, <code>description</code></li>
+                    <li>This serves as a reliable "always works" scraper that validates the entire pipeline end-to-end</li>
+                    <li>Register it in <code>apps/api/app/scraping/registry.py</code></li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">10</span> Fix Connection Pooling in Scraper Client</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Open <code>apps/api/app/scraping/client.py</code></li>
+                    <li>Convert <code>PoliteScraperClient</code> to use a single long-lived <code>httpx.AsyncClient</code> initialized during app startup (in the lifespan context manager) instead of creating a new client per request</li>
+                    <li>Add an <code>async close()</code> method that is called during shutdown</li>
+                    <li>Set connection pool limits: <code>httpx.AsyncClient(limits=httpx.Limits(max_connections=20, max_keepalive_connections=10))</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PHASE 3 -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+            <h3 class="text-xl font-bold text-blue-700 mb-4">🔵 Phase 3: Frontend Fixes (Week 3)</h3>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">11</span> Add Mobile Navigation</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Open <code>apps/web/components/Navbar.tsx</code></li>
+                    <li>Add a hamburger menu button visible only on small screens (<code>md:hidden</code>)</li>
+                    <li>Create a slide-out drawer or dropdown menu using Framer Motion's <code>AnimatePresence</code></li>
+                    <li>Include all navigation links in the mobile menu</li>
+                    <li>Add a close button and click-outside-to-close behavior</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">12</span> Fix API Client for FormData Support</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Open <code>apps/web/lib/api.ts</code></li>
+                    <li>Check if <code>options.body instanceof FormData</code> — if so, do NOT set <code>Content-Type</code> (let the browser set it with the multipart boundary)</li>
+                    <li>Remove the duplicate fetch implementation in <code>resume/page.tsx</code></li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">13</span> Fix Silent Error Handling</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Search all page files for empty <code>catch</code> blocks</li>
+                    <li>In each catch block, set an error state variable and display a user-friendly error toast or inline error message</li>
+                    <li>In <code>auth-context.tsx</code>, modify <code>refreshUser</code> to only clear the token on 401/403 errors, not on network errors or 5xx responses</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">14</span> Decompose Monolithic Page Components</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Create a <code>components/</code> directory structure: <code>components/listings/ListingCard.tsx</code>, <code>components/listings/FilterBar.tsx</code>, <code>components/resume/UploadDropzone.tsx</code>, <code>components/resume/ResumeStatus.tsx</code></li>
+                    <li>Extract inline types to <code>apps/web/types/index.ts</code></li>
+                    <li>Migrate from <code>catch (err: any)</code> to <code>catch (err: unknown)</code> with proper type narrowing</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">15</span> Fix Double Image Loading</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>In <code>Navbar.tsx</code>, <code>login/page.tsx</code>, and <code>signup/page.tsx</code>, read the current theme from the ThemeContext</li>
+                    <li>Conditionally render only the appropriate logo based on the active theme, instead of loading both and hiding one via CSS</li>
+                    <li>Use Next.js <code>&lt;Image priority /&gt;</code> for the visible logo to optimize LCP</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PHASE 4 -->
+        <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+            <h3 class="text-xl font-bold text-green-700 mb-4">🟢 Phase 4: Infrastructure & Quality (Week 4)</h3>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">16</span> Add Missing Dependencies</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Add to <code>requirements.txt</code>: <code>asyncpg>=0.29.0</code>, <code>aiosqlite>=0.20.0</code>, <code>sentence-transformers>=2.7.0</code>, <code>sentry-sdk[fastapi]>=2.0.0</code></li>
+                    <li>Pin all dependencies with exact versions using <code>pip-compile requirements.in > requirements.txt</code></li>
+                    <li>Or better: migrate to <code>uv</code> for fast, reproducible dependency resolution with lock files</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">17</span> Set Up CI/CD Pipeline</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Create <code>.github/workflows/ci.yml</code> with the following jobs:
+                        <ul class="list-disc list-inside ml-4">
+                            <li><strong>lint</strong>: Run <code>ruff check</code> (Python) and <code>eslint</code> (TypeScript)</li>
+                            <li><strong>test-backend</strong>: Set up PostgreSQL service container, run <code>pytest --cov=app</code></li>
+                            <li><strong>test-frontend</strong>: Run <code>npm run build</code> (catches TypeScript errors) and <code>npm run lint</code></li>
+                            <li><strong>security</strong>: Run <code>bandit -r apps/api/app</code> and <code>trivy image</code> scan</li>
+                            <li><strong>build</strong>: Build Docker images and push to GHCR</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">18</span> Add Frontend Testing Framework</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Install: <code>npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom</code></li>
+                    <li>Create <code>vitest.config.ts</code> with jsdom environment</li>
+                    <li>Write tests for: auth flow, listing card rendering, form validation, error handling</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">19</span> Add Database Connection Pool Limits</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Open <code>apps/api/app/db/session.py</code></li>
+                    <li>Set pool parameters: <code>create_async_engine(url, pool_size=10, max_overflow=5, pool_timeout=30, pool_recycle=1800)</code></li>
+                    <li>Add pgvector HNSW index in an Alembic migration: <code>CREATE INDEX ON listings USING hnsw (embedding vector_cosine_ops) WITH (m=16, ef_construction=64)</code></li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">20</span> Fix Redis Port Mismatch and Centralize Config</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Open <code>.env.example</code> — change <code>REDIS_URL=redis://localhost:6339/0</code> to <code>REDIS_URL=redis://localhost:6379/0</code></li>
+                    <li>Add Docker logging configuration: <code>logging: driver: "json-file" options: max-size: "10m" max-file: "3"</code> to all services in <code>docker-compose.yml</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PHASE 5 -->
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-6 mb-6">
+            <h3 class="text-xl font-bold text-purple-700 mb-4">🟣 Phase 5: Polish & Production Readiness (Week 5+)</h3>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">21</span> Add Password Policy Enforcement</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Create a Pydantic validator on the <code>UserRegister</code> schema's <code>password</code> field</li>
+                    <li>Enforce: minimum 8 characters, at least one uppercase, one lowercase, one digit</li>
+                    <li>Mirror the validation on the frontend signup form with Zod</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">22</span> Restrict CORS to Specific Methods</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Change <code>allow_methods=["*"]</code> to <code>allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]</code></li>
+                    <li>Change <code>allow_headers=["*"]</code> to <code>allow_headers=["Authorization", "Content-Type", "X-Request-ID"]</code></li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">23</span> Add Refresh Token Rotation</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Implement a short-lived access token (15 minutes) + long-lived refresh token (7 days) pattern</li>
+                    <li>Store refresh tokens in the database with a <code>revoked_at</code> timestamp</li>
+                    <li>Create a <code>POST /auth/refresh</code> endpoint that issues a new access token and rotates the refresh token</li>
+                    <li>Create a <code>POST /auth/logout</code> endpoint that revokes the refresh token</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">24</span> Add Monitoring and Observability</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Install and initialize <code>sentry-sdk</code> in <code>main.py</code>'s lifespan</li>
+                    <li>Add a <code>/metrics</code> endpoint using <code>prometheus-fastapi-instrumentator</code></li>
+                    <li>Add Flower to <code>docker-compose.yml</code> for Celery monitoring</li>
+                    <li>Set Docker logging limits on all services</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold flex items-center"><span class="step-number">25</span> Update README to Match Reality</p>
+                <ul class="ml-10 list-disc text-sm space-y-1 mt-2">
+                    <li>Remove references to Playwright, sentence-transformers, HeyGen, D-ID, and ElevenLabs from the architecture diagram until they are actually implemented</li>
+                    <li>Update the implementation roadmap checkboxes to accurately reflect current progress</li>
+                    <li>Add a "Known Limitations" section</li>
+                    <li>Add a contributing guide and development setup for new developers</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 12: MAKING SCRAPING WORK ==================== -->
+    <div class="page-break"></div>
+    <section id="scraping-fix" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">12. Making Scraping Actually Work — Detailed Guide</h2>
+
+        <p class="mb-4 text-sm">This section provides a concrete, step-by-step guide to make the scraping pipeline pull real job data from real websites.</p>
+
+        <h3 class="text-xl font-semibold mb-3">12.1 Immediate Fix: Use API-First Sources</h3>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+            <p class="text-sm mb-2"><strong>Instead of scraping rendered HTML, target sources with public APIs or static content:</strong></p>
+            <table class="w-full border-collapse border border-gray-300 text-sm">
+                <thead class="bg-white"><tr><th class="border p-2">Source</th><th class="border p-2">URL</th><th class="border p-2">Method</th><th class="border p-2">Difficulty</th></tr></thead>
+                <tbody>
+                    <tr><td class="border p-2">RemoteOK</td><td class="border p-2"><code>https://remoteok.com/api</code></td><td class="border p-2">JSON API (GET)</td><td class="border p-2 text-green-600">Easy</td></tr>
+                    <tr><td class="border p-2">Hacker News Jobs</td><td class="border p-2"><code>https://hacker-news.firebaseio.com/v0/</code></td><td class="border p-2">JSON API (GET)</td><td class="border p-2 text-green-600">Easy</td></tr>
+                    <tr><td class="border p-2">GitHub Jobs Repos</td><td class="border p-2"><code>raw.githubusercontent.com/SimplifyJobs/...</code></td><td class="border p-2">Static Markdown</td><td class="border p-2 text-amber-600">Medium</td></tr>
+                    <tr><td class="border p-2">Arbeitnow</td><td class="border p-2"><code>https://www.arbeitnow.com/api/job-board-api</code></td><td class="border p-2">JSON API (GET)</td><td class="border p-2 text-green-600">Easy</td></tr>
+                    <tr><td class="border p-2">Jobicy</td><td class="border p-2"><code>https://jobicy.com/api/v2/remote-jobs</code></td><td class="border p-2">JSON API (GET)</td><td class="border p-2 text-green-600">Easy</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">12.2 Step-by-Step: Creating a Working RemoteOK Scraper</h3>
+        <ol class="list-decimal list-inside space-y-4 text-sm">
+            <li>
+                <strong>Create the file:</strong> <code>apps/api/app/scraping/sources/remoteok_jobs.py</code>
+                <p class="ml-6 mt-1">Create a class <code>RemoteOKScraper(BaseScraper)</code> with <code>source_key = "remoteok"</code>, <code>source_name = "RemoteOK"</code>, <code>base_url = "https://remoteok.com"</code></p>
+            </li>
+            <li>
+                <strong>Implement discover_pages:</strong>
+                <p class="ml-6 mt-1">Return <code>["https://remoteok.com/api"]</code> — this is the only endpoint needed</p>
+            </li>
+            <li>
+                <strong>Implement scrape_page:</strong>
+                <p class="ml-6 mt-1">Use <code>self.client.get(page_url, headers={"Accept": "application/json"})</code>. Parse the JSON response. The first element is metadata (skip it). Each subsequent element has fields: <code>company</code>, <code>position</code>, <code>location</code>, <code>url</code>, <code>description</code>, <code>tags</code>, <code>date</code>. Map each to a <code>ListingCandidate</code>.</p>
+            </li>
+            <li>
+                <strong>Register the scraper:</strong>
+                <p class="ml-6 mt-1">Open <code>apps/api/app/scraping/registry.py</code>. Import <code>RemoteOKScraper</code> and add <code>self.register(RemoteOKScraper())</code> in the <code>__init__</code> method.</p>
+            </li>
+            <li>
+                <strong>Test it:</strong>
+                <p class="ml-6 mt-1">Write a test in <code>tests/test_scraping.py</code> that calls <code>RemoteOKScraper().run(max_pages=1)</code> and asserts that at least 10 candidates are returned with non-empty titles and companies.</p>
+            </li>
+        </ol>
+
+        <h3 class="text-xl font-semibold mt-8 mb-3">12.3 Step-by-Step: Creating a Working HN Who's Hiring Scraper</h3>
+        <ol class="list-decimal list-inside space-y-4 text-sm">
+            <li>
+                <strong>Create the file:</strong> <code>apps/api/app/scraping/sources/hn_jobs.py</code>
+                <p class="ml-6 mt-1">Create <code>HNJobsScraper(BaseScraper)</code> targeting the Hacker News Firebase API</p>
+            </li>
+            <li>
+                <strong>Discover the latest "Who's Hiring" thread:</strong>
+                <p class="ml-6 mt-1">Use the Algolia HN search API: <code>https://hn.algolia.com/api/v1/search_by_date?query="who is hiring"&tags=ask_hn&numericFilters=created_at_i>{one_month_ago_timestamp}</code></p>
+                <p class="ml-6 mt-1">Extract the <code>objectID</code> of the most recent "Ask HN: Who is hiring?" post</p>
+            </li>
+            <li>
+                <strong>Fetch all comments (job postings):</strong>
+                <p class="ml-6 mt-1">Use <code>https://hacker-news.firebaseio.com/v0/item/{objectID}.json</code> to get the post with its <code>kids</code> array (comment IDs). Fetch each comment's text.</p>
+            </li>
+            <li>
+                <strong>Parse comment text into ListingCandidate:</strong>
+                <p class="ml-6 mt-1">HN "Who's Hiring" comments follow a convention: first line is "Company Name | Role | Location | Remote/Onsite". Parse this pattern using regex. The rest of the comment is the job description.</p>
+            </li>
+        </ol>
+
+        <h3 class="text-xl font-semibold mt-8 mb-3">12.4 Fixing the Existing YC Jobs Scraper for Real Use</h3>
+        <ol class="list-decimal list-inside space-y-4 text-sm">
+            <li><strong>Check for an underlying API:</strong> Open DevTools Network tab on <code>workatastartup.com/jobs</code>. Filter by XHR/Fetch. Look for API calls like <code>/api/companies</code> or <code>/api/jobs</code>. If found, switch to API-based scraping (much more reliable).</li>
+            <li><strong>If no API exists, use Playwright:</strong> Install Playwright. Create a <code>PlaywrightScraperClient</code>. Launch headless Chromium, navigate to the page, wait for job cards to render, then extract the rendered DOM.</li>
+            <li><strong>Update CSS selectors:</strong> Using the actual rendered DOM from DevTools, identify the real CSS class names for job cards, titles, companies, and locations. Replace the guessed selectors.</li>
+            <li><strong>Handle infinite scroll:</strong> Many job boards load more content on scroll. Implement a scroll-and-wait loop in Playwright: scroll to bottom, wait 1 second, check if new content appeared, repeat up to N times.</li>
+            <li><strong>Add VCR test fixtures:</strong> Record the actual rendered HTML from one successful Playwright run and save it as a test fixture. Use this fixture in unit tests so tests don't depend on network access.</li>
+        </ol>
+
+        <h3 class="text-xl font-semibold mt-8 mb-3">12.5 Validation: Proving Scraping Works</h3>
+        <ol class="list-decimal list-inside space-y-3 text-sm">
+            <li>Run each scraper individually via the internal API endpoint: <code>POST /api/v1/internal/scrape/{source_key}?max_pages=1</code></li>
+            <li>Verify the response contains a <code>ScrapeSummary</code> with <code>listings_found > 0</code> and <code>inserted_count > 0</code></li>
+            <li>Query the database: <code>SELECT COUNT(*) FROM raw_listings WHERE source_id = '{source_id}'</code></li>
+            <li>Verify that <code>raw_content</code> contains actual job description text, not empty strings or placeholder values</li>
+            <li>Run <code>run_all_scrapers</code> and verify all summaries show successful ingestion</li>
+        </ol>
+    </section>
+
+    <!-- ==================== SECTION 13: PRODUCTION CHECKLIST ==================== -->
+    <div class="page-break"></div>
+    <section id="production-checklist" class="mb-16">
+        <h2 class="text-3xl font-bold text-blue-700 border-b-2 border-blue-200 pb-2 mb-6">13. Production Readiness Checklist</h2>
+
+        <table class="w-full border-collapse border border-gray-300 text-sm">
+            <thead class="bg-gray-100"><tr><th class="border p-2 w-16">✅</th><th class="border p-2">Item</th><th class="border p-2 w-24">Priority</th></tr></thead>
+            <tbody>
+                <tr class="bg-green-50"><td class="border p-2 text-center text-green-700 font-bold">✅</td><td class="border p-2 font-medium text-green-900">SECRET_KEY is unique, randomly generated, and not committed to version control</td><td class="border p-2 text-green-700 font-semibold">Passed</td></tr>
+                <tr class="bg-green-50"><td class="border p-2 text-center text-green-700 font-bold">✅</td><td class="border p-2 font-medium text-green-900">JWT tokens stored in HttpOnly cookies, not localStorage</td><td class="border p-2 text-green-700 font-semibold">Passed</td></tr>
+                <tr class="bg-green-50"><td class="border p-2 text-center text-green-700 font-bold">✅</td><td class="border p-2 font-medium text-green-900">Docker containers run as non-root user</td><td class="border p-2 text-green-700 font-semibold">Passed</td></tr>
+                <tr class="bg-green-50"><td class="border p-2 text-center text-green-700 font-bold">✅</td><td class="border p-2 font-medium text-green-900">Authentication endpoints have rate limiting</td><td class="border p-2 text-green-700 font-semibold">Passed</td></tr>
+                <tr class="bg-green-50"><td class="border p-2 text-center text-green-700 font-bold">✅</td><td class="border p-2 font-medium text-green-900">Database credentials not hardcoded in any committed file</td><td class="border p-2 text-green-700 font-semibold">Passed</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">At least one scraper demonstrably pulls real data</td><td class="border p-2 text-red-600">Critical</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">CORS restricted to specific methods and headers</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Refresh token rotation implemented</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Database connection pool limits configured</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">pgvector HNSW index created for embedding search</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">CI/CD pipeline with linting, testing, and security scanning</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Mobile navigation works (hamburger menu)</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">All missing dependencies added (asyncpg, sentence-transformers, etc.)</td><td class="border p-2">High</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Password policy enforced (min 8 chars, complexity)</td><td class="border p-2">Medium</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Error handling produces user-visible feedback</td><td class="border p-2">Medium</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Dependencies pinned with lock file</td><td class="border p-2">Medium</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Monitoring and alerting configured (Sentry, metrics)</td><td class="border p-2">Medium</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Docker logging capped (json-file max-size)</td><td class="border p-2">Medium</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">Frontend tests exist (Vitest + React Testing Library)</td><td class="border p-2">Medium</td></tr>
+                <tr><td class="border p-2 text-center">☐</td><td class="border p-2">README accurately reflects implemented features only</td><td class="border p-2">Low</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- FOOTER -->
+    <div class="border-t-2 border-gray-200 pt-6 mt-12 text-center text-xs text-gray-400">
+        <p>Nexus Job Scraper — Complete Project Audit & Implementation Plan</p>
+        <p>Generated on September 15, 2026 | Prepared by Antigravity AI Audit Engine</p>
+        <p>Repository: github.com/a5tek/nexus-job-scraper</p>
+    </div>
+
+    <!-- PRINT BUTTON -->
+    <div class="no-print text-center mt-8">
+        <button onclick="window.print()" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition shadow-lg">
+            📄 Save as PDF (Ctrl+P → Save as PDF)
+        </button>
+        <p class="text-sm text-gray-400 mt-2">Use your browser's Print function (Ctrl+P) and select "Save as PDF" as the destination.</p>
+    </div>
+
+</body>
+</html>

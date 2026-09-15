@@ -51,13 +51,23 @@ async def test_register_and_login_flow(client: AsyncClient):
     assert res_bad.status_code == 401
     assert res_bad.json()["error"]["code"] == "INVALID_CREDENTIALS"
 
-    # 5. Access /auth/me with valid token
+    # 5. Access /auth/me with valid token header
     headers = {"Authorization": f"Bearer {token}"}
     res_me = await client.get("/api/v1/auth/me", headers=headers)
     assert res_me.status_code == 200
     assert res_me.json()["email"] == "candidate@example.com"
 
+    # 5b. Access /auth/me with HttpOnly cookie alone (no Authorization header)
+    res_cookie_me = await client.get("/api/v1/auth/me")
+    assert res_cookie_me.status_code == 200
+    assert res_cookie_me.json()["email"] == "candidate@example.com"
+
+    # 5c. Logout clears session cookie
+    res_logout = await client.post("/api/v1/auth/logout")
+    assert res_logout.status_code == 200
+
     # 6. Access /auth/me without token -> 401
+    client.cookies.clear()
     res_unauth = await client.get("/api/v1/auth/me")
     assert res_unauth.status_code == 401
     assert res_unauth.json()["error"]["code"] == "NOT_AUTHENTICATED"

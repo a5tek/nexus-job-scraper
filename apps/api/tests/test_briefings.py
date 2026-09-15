@@ -141,6 +141,7 @@ async def test_briefings_api_endpoints(client: AsyncClient):
     headers = {"Authorization": f"Bearer {token}"}
 
     # 2. Unauthenticated check
+    client.cookies.clear()
     unauth = await client.get("/api/v1/briefings")
     assert unauth.status_code == 401
 

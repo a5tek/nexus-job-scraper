@@ -197,6 +197,7 @@ async def test_agent_api_endpoint(client: AsyncClient):
     token = reg_res.json()["access_token"]
 
     # Unauthenticated request rejected
+    client.cookies.clear()
     res_unauth = await client.post("/api/v1/agent/chat", json={"message": "Hello"})
     assert res_unauth.status_code == 401
 

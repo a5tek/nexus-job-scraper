@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import decode_access_token
@@ -11,21 +11,27 @@ security_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """
-    Extracts and verifies JWT token from Authorization Bearer header.
+    Extracts and verifies JWT token from Authorization Bearer header or HttpOnly cookie.
     Resolves the authenticated User record or raises 401 Unauthorized.
     """
-    if not credentials or not credentials.credentials:
+    token: Optional[str] = None
+    if credentials and credentials.credentials:
+        token = credentials.credentials
+    elif request and request.cookies and request.cookies.get("nexus_token"):
+        token = request.cookies.get("nexus_token")
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": {"code": "NOT_AUTHENTICATED", "message": "Authentication credentials were not provided."}},
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = credentials.credentials
     payload = decode_access_token(token)
     if not payload:
         raise HTTPException(
@@ -60,17 +66,23 @@ async def get_current_user(
 
 
 async def get_current_user_optional(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
     """
-    Extracts user if valid Bearer token provided, otherwise gracefully returns None.
+    Extracts user if valid Bearer token or HttpOnly cookie is provided, otherwise gracefully returns None.
     Allows public browsing with personalized augmentation when signed in.
     """
-    if not credentials or not credentials.credentials:
+    token: Optional[str] = None
+    if credentials and credentials.credentials:
+        token = credentials.credentials
+    elif request and request.cookies and request.cookies.get("nexus_token"):
+        token = request.cookies.get("nexus_token")
+
+    if not token:
         return None
 
-    token = credentials.credentials
     payload = decode_access_token(token)
     if not payload:
         return None

@@ -1,23 +1,37 @@
 version: '3.8'
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-app-env: &app-environment
+  DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@postgres:5432/${POSTGRES_DB:-nexus}}
+  SYNC_DATABASE_URL: ${SYNC_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@postgres:5432/${POSTGRES_DB:-nexus}}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  APP_ENV: ${APP_ENV:-development}
+  SECRET_KEY: ${SECRET_KEY:-}
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: nexus-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: nexus
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespassword}
+      POSTGRES_DB: ${POSTGRES_DB:-nexus}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d nexus"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-nexus}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    logging: *default-logging
 
   redis:
     image: redis:7-alpine
@@ -32,6 +46,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    logging: *default-logging
 
   api:
     build:
@@ -45,14 +60,12 @@ services:
       redis:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgrespassword@postgres:5432/nexus
-      - SYNC_DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/nexus
-      - REDIS_URL=redis://redis:6379/0
-      - APP_ENV=production
+      <<: *app-environment
     ports:
       - "8000:8000"
     volumes:
       - storage_data:/app/storage
+    logging: *default-logging
 
   worker:
     build:
@@ -67,12 +80,10 @@ services:
       redis:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgrespassword@postgres:5432/nexus
-      - SYNC_DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/nexus
-      - REDIS_URL=redis://redis:6379/0
-      - APP_ENV=production
+      <<: *app-environment
     volumes:
       - storage_data:/app/storage
+    logging: *default-logging
 
 volumes:
   postgres_data:

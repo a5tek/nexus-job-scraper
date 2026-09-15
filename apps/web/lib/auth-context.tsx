@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { apiClient } from "@/lib/api";
+import { apiClient, ApiError } from "@/lib/api";
 
 export interface User {
   id: string;
@@ -22,7 +22,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;
   register: (data: { email: string; password: string; name: string }) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -34,22 +34,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = async () => {
-    const storedToken = localStorage.getItem("nexus_token");
-    if (!storedToken) {
-      setUser(null);
-      setToken(null);
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const userData = await apiClient<User>("/auth/me");
       setUser(userData);
-      setToken(storedToken);
-    } catch {
-      localStorage.removeItem("nexus_token");
-      setUser(null);
-      setToken(null);
+      const storedToken = typeof window !== "undefined" ? localStorage.getItem("nexus_token") : null;
+      setToken(storedToken || "session-active");
+    } catch (err: unknown) {
+      // Only clear user session if unauthorized (401) or forbidden (403)
+      // Never aggressively log user out on transient network error or 5xx server issues (SEC-008)
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("nexus_token");
+        }
+        setUser(null);
+        setToken(null);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +63,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       method: "POST",
       body: JSON.stringify(credentials),
     });
-    localStorage.setItem("nexus_token", res.access_token);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nexus_token", res.access_token);
+    }
     setToken(res.access_token);
     setUser(res.user);
   };
@@ -74,15 +75,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       method: "POST",
       body: JSON.stringify(data),
     });
-    localStorage.setItem("nexus_token", res.access_token);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nexus_token", res.access_token);
+    }
     setToken(res.access_token);
     setUser(res.user);
   };
 
-  const logout = () => {
-    localStorage.removeItem("nexus_token");
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await apiClient("/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore network errors during logout
+    } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("nexus_token");
+      }
+      setToken(null);
+      setUser(null);
+    }
   };
 
   return (
