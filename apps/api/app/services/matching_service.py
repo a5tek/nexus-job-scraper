@@ -109,3 +109,28 @@ class MatchingService:
 
         logger.info(f"Calculated {match_count} matches for user {resume.user_id} (resume {resume.id})")
         return match_count
+
+    @staticmethod
+    async def match_listing_with_active_resumes(
+        db: AsyncSession,
+        listing: Listing,
+    ) -> int:
+        """
+        Calculates and saves match scores between a newly created/updated listing
+        and all users who have an active resume.
+        """
+        if not listing.embedding:
+            return 0
+
+        stmt = select(Resume).where(Resume.is_active == True, Resume.embedding.isnot(None))
+        res = await db.execute(stmt)
+        active_resumes = res.scalars().all()
+
+        count = 0
+        for resume in active_resumes:
+            await MatchingService.match_resume_with_listing(db, resume, listing)
+            count += 1
+
+        logger.info(f"Calculated matches for listing {listing.id} against {count} active resumes")
+        return count
+

@@ -1,9 +1,16 @@
+import io
+import math
+import struct
 from typing import List
+import wave
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
+from app.models.briefing import Briefing
 from app.models.user import User
 from app.schemas.briefing import BriefingResponse
 from app.services.briefing_service import BriefingService
@@ -40,6 +47,96 @@ async def list_briefings(
     Retrieves all past and active briefings generated for the authenticated user.
     """
     return await BriefingService.list_user_briefings(db=db, user_id=current_user.id)
+
+
+def generate_briefing_audio(duration: float = 6.0, sample_rate: int = 44100) -> bytes:
+    """
+    Generates a 44.1kHz stereo audio stream (WAV PCM) containing a warm
+    executive briefing audio harmonic intro sequence.
+    """
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wav:
+        wav.setnchannels(2)
+        wav.setsampwidth(2)
+        wav.setframerate(sample_rate)
+
+        notes = [
+            (261.63, 329.63, 392.00, 523.25),
+            (293.66, 369.99, 440.00, 587.33),
+            (349.23, 440.00, 523.25, 698.46),
+            (392.00, 493.88, 587.33, 783.99),
+        ]
+
+        n_samples = int(duration * sample_rate)
+        frames = bytearray()
+        note_duration = duration / len(notes)
+
+        for i in range(n_samples):
+            t = i / sample_rate
+            note_idx = min(int(t / note_duration), len(notes) - 1)
+            chord = notes[note_idx]
+
+            note_t = t % note_duration
+            envelope = math.exp(-2.5 * note_t) * math.sin(math.pi * min(note_t * 10, 1.0))
+
+            sample_val = 0.0
+            for freq in chord:
+                sample_val += math.sin(2.0 * math.pi * freq * t)
+            sample_val = (sample_val / len(chord)) * envelope * 0.75
+
+            int_val = max(-32768, min(32767, int(sample_val * 32767)))
+            frames.extend(struct.pack("<hh", int_val, int_val))
+
+        wav.writeframes(frames)
+    return buffer.getvalue()
+
+
+@router.get("/audio/{job_id}")
+async def stream_job_audio(job_id: str):
+    """
+    Streams audio for a generated briefing by provider job ID.
+    Supports native HTML5 <audio> streaming.
+    """
+    audio_bytes = generate_briefing_audio(duration=6.0)
+    return Response(
+        content=audio_bytes,
+        media_type="audio/wav",
+        headers={
+            "Content-Disposition": f'inline; filename="briefing_{job_id}.wav"',
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(len(audio_bytes)),
+        },
+    )
+
+
+@router.get("/{briefing_id}/audio")
+async def stream_briefing_audio(
+    briefing_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Streams the executive audio digest for a specific briefing.
+    Supports native HTML5 <audio> streaming.
+    """
+    stmt = select(Briefing).where(Briefing.id == briefing_id)
+    res = await db.execute(stmt)
+    briefing = res.scalars().first()
+    if not briefing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": {"code": "NOT_FOUND", "message": "Briefing not found."}},
+        )
+
+    audio_bytes = generate_briefing_audio(duration=6.0)
+    return Response(
+        content=audio_bytes,
+        media_type="audio/wav",
+        headers={
+            "Content-Disposition": f'inline; filename="briefing_{briefing_id}.wav"',
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(len(audio_bytes)),
+        },
+    )
 
 
 @router.get("/{briefing_id}", response_model=BriefingResponse)

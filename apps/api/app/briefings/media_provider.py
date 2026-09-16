@@ -52,7 +52,7 @@ class MockMediaProvider(BaseMediaProvider):
         return JobSubmissionResult(job_id=job_id, status="done")
 
     async def poll_job(self, job_id: str) -> JobStatusResult:
-        media_url = f"https://cdn.nexus.internal/briefings/{job_id}.mp3"
+        media_url = f"/api/v1/briefings/audio/{job_id}"
         return JobStatusResult(
             status="done",
             media_url=media_url,

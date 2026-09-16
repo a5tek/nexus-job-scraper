@@ -217,3 +217,43 @@ async def test_resume_upload_and_opportunity_feed(client: AsyncClient, db_sessio
     # Verify shortlist now empty
     shortlist_empty = await client.get("/api/v1/shortlist", headers=headers)
     assert len(shortlist_empty.json()) == 0
+
+    # 8. Verify that a newly added listing without prior match gets dynamically matched on feed retrieval
+    new_raw = RawListing(
+        source_id=raw1.source_id,
+        source_url="https://example.com/job/devops-k8s",
+        canonical_url="https://example.com/job/devops-k8s",
+        dedupe_key="alpha:id:devops-k8s",
+        content_hash="devops-k8s-hash",
+        raw_title="Site Reliability Engineer",
+        raw_content="Kubernetes, Docker, Python scripting, Terraform, AWS CI/CD",
+        extraction_status="extracted",
+        is_active=True,
+    )
+    db_session.add(new_raw)
+    await db_session.commit()
+    await db_session.refresh(new_raw)
+
+    new_listing = Listing(
+        raw_listing_id=new_raw.id,
+        title="Site Reliability Engineer",
+        company="Platform Cloud",
+        location="Remote",
+        remote_ok=True,
+        required_skills=["Kubernetes", "Docker", "Python"],
+        embedding=embedding_provider.embed_text("Site Reliability Engineer Platform Cloud Kubernetes Docker Python"),
+        extractor_version="1.0.0",
+    )
+    db_session.add(new_listing)
+    await db_session.commit()
+    await db_session.refresh(new_listing)
+
+    # Calling feed dynamically matches new_listing
+    feed_updated = await client.get("/api/v1/listings", headers=headers)
+    assert feed_updated.status_code == 200
+    feed_items = feed_updated.json()
+    new_role_in_feed = next((item for item in feed_items if item["id"] == new_listing.id), None)
+    assert new_role_in_feed is not None
+    assert new_role_in_feed["match_score"] is not None
+    assert new_role_in_feed["match_score"] >= 10
+    assert new_role_in_feed["match_explanation"] is not None

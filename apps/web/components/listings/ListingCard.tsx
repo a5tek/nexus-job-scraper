@@ -97,7 +97,7 @@ export function ListingCard({
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2 flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            {matchScore ? (
+            {matchScore != null ? (
               <div
                 className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-pill text-xs font-bold ${
                   matchScore >= 80

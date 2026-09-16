@@ -22,9 +22,13 @@ export interface ListingItem {
 }
 
 export interface SavedListingItem {
-  saved_id: string;
-  saved_at: string;
-  notes: string | null;
+  id?: string;
+  saved_id?: string;
+  user_id?: string;
+  listing_id?: string;
+  created_at?: string;
+  saved_at?: string;
+  notes?: string | null;
   listing: {
     id: string;
     title: string;
@@ -33,8 +37,12 @@ export interface SavedListingItem {
     remote_ok: boolean | null;
     stipend: string | null;
     required_skills: string[];
+    experience_level?: string | null;
     deadline: string | null;
-    source_url: string;
+    source_url?: string | null;
+    match_score?: number | null;
+    match_explanation?: string | null;
+    is_saved?: boolean;
   };
   match?: {
     display_score: number;

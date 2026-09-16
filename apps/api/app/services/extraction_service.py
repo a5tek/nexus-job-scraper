@@ -73,12 +73,15 @@ class ExtractionService:
                         continue
 
                     # Persist normalized listing
-                    await ListingRepository.upsert_from_extraction(
+                    listing = await ListingRepository.upsert_from_extraction(
                         db=db,
                         raw_listing_id=raw.id,
                         extracted=extracted,
                         raw_content=raw.raw_content,
                     )
+                    from app.services.matching_service import MatchingService
+                    await MatchingService.match_listing_with_active_resumes(db, listing)
+
                     raw.extraction_status = "extracted"
                     extracted_count += 1
                 else:

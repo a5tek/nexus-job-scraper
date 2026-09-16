@@ -31,6 +31,27 @@ async def get_opportunity_feed(
     If authenticated, results are personalized and ranked by semantic match score.
     """
     if current_user:
+        # Dynamically ensure all active listings are matched against user's active resume
+        from app.repositories.resume_repo import ResumeRepository
+        from app.services.matching_service import MatchingService
+        active_resume = await ResumeRepository.get_active_by_user_id(db, current_user.id)
+        if active_resume and active_resume.embedding:
+            unmatched_stmt = (
+                select(Listing)
+                .outerjoin(
+                    Match,
+                    (Match.listing_id == Listing.id) & (Match.user_id == current_user.id),
+                )
+                .where(
+                    Listing.embedding.isnot(None),
+                    Match.id.is_(None),
+                )
+            )
+            unmatched_listings = (await db.execute(unmatched_stmt)).scalars().all()
+            if unmatched_listings:
+                for listing in unmatched_listings:
+                    await MatchingService.match_resume_with_listing(db, active_resume, listing)
+
         query = (
             select(Listing, Match, SavedListing, RawListing.source_url)
             .join(RawListing, Listing.raw_listing_id == RawListing.id)
@@ -137,6 +158,13 @@ async def get_listing_detail(
                 detail={"error": {"code": "LISTING_NOT_FOUND", "message": "Listing not found."}},
             )
         listing, match, saved, source_url = row
+        if match is None and listing.embedding:
+            from app.repositories.resume_repo import ResumeRepository
+            from app.services.matching_service import MatchingService
+            active_resume = await ResumeRepository.get_active_by_user_id(db, current_user.id)
+            if active_resume and active_resume.embedding:
+                match = await MatchingService.match_resume_with_listing(db, active_resume, listing)
+
         return OpportunityFeedItem(
             id=listing.id,
             title=listing.title,
@@ -215,6 +243,13 @@ async def search_listings(
             )
             match_res = await db.execute(match_stmt)
             match = match_res.scalar_one_or_none()
+
+            if match is None and listing.embedding:
+                from app.repositories.resume_repo import ResumeRepository
+                from app.services.matching_service import MatchingService
+                active_resume = await ResumeRepository.get_active_by_user_id(db, current_user.id)
+                if active_resume and active_resume.embedding:
+                    match = await MatchingService.match_resume_with_listing(db, active_resume, listing)
 
             saved_stmt = select(SavedListing).where(
                 SavedListing.listing_id == listing.id,

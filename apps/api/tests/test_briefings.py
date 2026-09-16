@@ -174,3 +174,15 @@ async def test_briefings_api_endpoints(client: AsyncClient):
     # 7. Non-existent briefing returns 404
     bad_res = await client.get("/api/v1/briefings/non-existent-id", headers=headers)
     assert bad_res.status_code == 404
+
+    # 8. Test audio streaming endpoints
+    audio_res = await client.get(f"/api/v1/briefings/{briefing_id}/audio")
+    assert audio_res.status_code == 200
+    assert audio_res.headers["content-type"] == "audio/wav"
+    assert len(audio_res.content) > 1000
+
+    job_audio_res = await client.get("/api/v1/briefings/audio/job_mock_123")
+    assert job_audio_res.status_code == 200
+    assert job_audio_res.headers["content-type"] == "audio/wav"
+    assert len(job_audio_res.content) > 1000
+

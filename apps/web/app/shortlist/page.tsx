@@ -20,10 +20,15 @@ import type { SavedListingItem } from "@/types";
 export default function ShortlistPage() {
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery<{ count: number; items: SavedListingItem[] }>({
+  const { data, isLoading, error } = useQuery<SavedListingItem[]>({
     queryKey: ["shortlist"],
-    queryFn: async () => apiClient("/shortlist"),
+    queryFn: async () => {
+      const res = await apiClient<SavedListingItem[] | { items: SavedListingItem[] }>("/shortlist");
+      return Array.isArray(res) ? res : res?.items || [];
+    },
   });
+
+  const items = data || [];
 
   const removeMutation = useMutation({
     mutationFn: async (listingId: string) => {
@@ -43,8 +48,8 @@ export default function ShortlistPage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  const urgentRoles = data?.items.filter((item) => {
-    const days = calculateDaysRemaining(item.listing.deadline);
+  const urgentRoles = items.filter((item) => {
+    const days = calculateDaysRemaining(item.listing?.deadline ?? null);
     return days !== null && days <= 7 && days >= 0;
   });
 
@@ -76,7 +81,7 @@ export default function ShortlistPage() {
         </div>
 
         {/* Urgent Deadlines Alert */}
-        {urgentRoles && urgentRoles.length > 0 && (
+        {urgentRoles.length > 0 && (
           <div className="p-5 rounded-card bg-amber-50/80 border border-amber-200/80 shadow-2xs flex items-start space-x-4">
             <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
               <AlertTriangle className="w-5 h-5" />
@@ -88,7 +93,7 @@ export default function ShortlistPage() {
               <p className="text-xs text-amber-800/90 leading-relaxed">
                 Prioritize your application materials for:{" "}
                 <span className="font-semibold">
-                  {urgentRoles.map((r) => r.listing.title).join(", ")}
+                  {urgentRoles.map((r) => r.listing?.title).filter(Boolean).join(", ")}
                 </span>
                 .
               </p>
@@ -107,7 +112,7 @@ export default function ShortlistPage() {
             <p className="text-sm font-semibold text-accentRed">Failed to load shortlist</p>
             <p className="text-xs text-secondaryText">Please ensure you are signed in.</p>
           </div>
-        ) : data && data.items.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="py-16 text-center bg-surface rounded-card border border-softBorder p-8 space-y-4">
             <div className="w-12 h-12 mx-auto rounded-2xl bg-canvas flex items-center justify-center text-secondaryText">
               <Bookmark className="w-6 h-6" />
@@ -128,14 +133,15 @@ export default function ShortlistPage() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {data?.items.map((item, index) => {
-              const daysRemaining = calculateDaysRemaining(item.listing.deadline);
+            {items.map((item, index) => {
+              const daysRemaining = calculateDaysRemaining(item.listing?.deadline ?? null);
               const isClosingSoon = daysRemaining !== null && daysRemaining <= 7 && daysRemaining >= 0;
-              const matchScore = item.match?.display_score;
+              const matchScore = item.listing?.match_score ?? item.match?.display_score;
+              const matchExplanation = item.listing?.match_explanation ?? item.match?.justification;
 
               return (
                 <motion.div
-                  key={item.saved_id}
+                  key={item.saved_id || item.id || item.listing?.id || index}
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.4) }}
@@ -144,7 +150,7 @@ export default function ShortlistPage() {
                 >
                   <div className="space-y-2 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      {matchScore ? (
+                      {matchScore != null && (
                         <div
                           className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-pill text-xs font-bold ${
                             matchScore >= 80
@@ -155,7 +161,7 @@ export default function ShortlistPage() {
                           <Sparkles className="w-3 h-3" />
                           <span>{matchScore}% Fit</span>
                         </div>
-                      ) : null}
+                      )}
 
                       {isClosingSoon && (
                         <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-pill text-xs font-bold bg-accentYellow-subtle text-amber-700 border border-amber-300">
@@ -166,16 +172,16 @@ export default function ShortlistPage() {
                     </div>
 
                     <h2 className="text-lg font-bold text-primaryText tracking-tight">
-                      {item.listing.title}
+                      {item.listing?.title}
                     </h2>
 
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-secondaryText font-medium">
-                      <span className="font-semibold text-primaryText">{item.listing.company}</span>
+                      <span className="font-semibold text-primaryText">{item.listing?.company}</span>
                       <span className="flex items-center space-x-1">
                         <MapPin className="w-3 h-3" />
-                        <span>{item.listing.location || (item.listing.remote_ok ? "Remote" : "Not specified")}</span>
+                        <span>{item.listing?.location || (item.listing?.remote_ok ? "Remote" : "Not specified")}</span>
                       </span>
-                      {item.listing.deadline && (
+                      {item.listing?.deadline && (
                         <span className="flex items-center space-x-1">
                           <Clock className="w-3 h-3" />
                           <span>Deadline: {item.listing.deadline}</span>
@@ -183,36 +189,38 @@ export default function ShortlistPage() {
                       )}
                     </div>
 
-                    {item.match?.justification && (
+                    {matchExplanation && (
                       <p className="text-xs text-secondaryText leading-relaxed pt-1 line-clamp-2">
-                        {item.match.justification}
+                        {matchExplanation}
                       </p>
                     )}
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center space-x-3 shrink-0">
-                    <a
-                      href={item.listing.source_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-4 py-2.5 rounded-btn bg-accentBlue hover:bg-accentBlue-hover text-white text-xs font-semibold shadow-2xs transition-all flex items-center space-x-1.5"
-                    >
-                      <span>Apply on Source</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                    {item.listing?.source_url && (
+                      <a
+                        href={item.listing.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-4 py-2.5 rounded-btn bg-accentBlue hover:bg-accentBlue-hover text-white text-xs font-semibold shadow-2xs transition-all flex items-center space-x-1.5"
+                      >
+                        <span>Apply on Source</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
 
                     <button
-                      onClick={() => removeMutation.mutate(item.listing.id)}
+                      onClick={() => removeMutation.mutate(item.listing?.id || item.listing_id || "")}
                       title="Remove from shortlist"
                       className="p-2.5 rounded-btn bg-surface hover:bg-accentRed-subtle text-secondaryText hover:text-accentRed border border-softBorder hover:border-accentRed/30 transition-all"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  </motion.div>
-                );
-              })}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

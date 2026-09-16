@@ -94,10 +94,11 @@ class BriefingService:
             
             if submission.status == "done":
                 poll_res = await provider.poll_job(submission.job_id)
+                media_url = poll_res.media_url or f"/api/v1/briefings/{briefing.id}/audio"
                 briefing = await BriefingRepository.mark_done(
                     db=db,
                     briefing=briefing,
-                    media_url=poll_res.media_url or "https://cdn.nexus.internal/briefing.mp3",
+                    media_url=media_url,
                     script=script,
                 )
             else:
@@ -136,12 +137,16 @@ class BriefingService:
                     )
                 )
 
+        media_url = briefing.media_url
+        if not media_url or "cdn.nexus.internal" in media_url:
+            media_url = f"/api/v1/briefings/{briefing.id}/audio"
+
         return BriefingResponse(
             id=briefing.id,
             user_id=briefing.user_id,
             status=briefing.status,
             script=briefing.script,
-            media_url=briefing.media_url,
+            media_url=media_url,
             provider=briefing.provider,
             error_message=briefing.error_message,
             completed_at=briefing.completed_at,

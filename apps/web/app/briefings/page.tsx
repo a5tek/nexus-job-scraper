@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Headphones, 
   Sparkles, 
   Play, 
+  Pause,
+  Square,
+  Volume2,
   Clock, 
   Calendar, 
   RefreshCw, 
@@ -21,6 +24,8 @@ import type { BriefingRecord } from "@/types";
 export default function BriefingsPage() {
   const queryClient = useQueryClient();
   const [selectedBriefingId, setSelectedBriefingId] = useState<string | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   // 1. Fetch user's briefings
   const { data: briefings, isLoading, error } = useQuery<BriefingRecord[]>({
@@ -43,6 +48,74 @@ export default function BriefingsPage() {
   const activeBriefing = briefings && briefings.length > 0
     ? (briefings.find((b) => b.id === selectedBriefingId) || briefings[0])
     : null;
+
+  // Cleanup speech synthesis on unmount or briefing switch
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [selectedBriefingId]);
+
+  const handleToggleSpeech = (text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+    if (isSpeaking && !isPaused) {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+      return;
+    }
+
+    if (isSpeaking && isPaused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+    setIsPaused(false);
+  };
+
+  const handleStopSpeech = () => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+    setIsPaused(false);
+  };
+
+  const getAudioUrl = (mediaUrl: string | null | undefined, briefingId: string): string => {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+    if (!mediaUrl || mediaUrl.includes("cdn.nexus.internal")) {
+      return `${apiBase}/briefings/${briefingId}/audio`;
+    }
+    if (mediaUrl.startsWith("http")) {
+      return mediaUrl;
+    }
+    if (mediaUrl.startsWith("/api/v1")) {
+      return `${apiBase.replace(/\/api\/v1\/?$/, "")}${mediaUrl}`;
+    }
+    return `${apiBase}${mediaUrl.startsWith("/") ? "" : "/"}${mediaUrl}`;
+  };
+
+  const audioUrl = activeBriefing ? getAudioUrl(activeBriefing.media_url, activeBriefing.id) : "";
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-canvas py-8 px-4 sm:px-6">
@@ -127,9 +200,9 @@ export default function BriefingsPage() {
                   </div>
                 </div>
 
-                {activeBriefing.media_url && (
+                {audioUrl && (
                   <a
-                    href={activeBriefing.media_url}
+                    href={audioUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="px-3.5 py-1.5 rounded-btn bg-canvas hover:bg-softBorder/40 border border-softBorder text-xs font-semibold text-secondaryText hover:text-primaryText transition-colors flex items-center space-x-1.5"
@@ -140,16 +213,67 @@ export default function BriefingsPage() {
                 )}
               </div>
 
-              {/* Native Audio Player */}
-              {activeBriefing.media_url && (
+              {/* Interactive AI Voice Narration */}
+              {activeBriefing.script && (
+                <div className="p-4 rounded-card bg-accentBlue/5 border border-accentBlue/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Volume2 className="w-4 h-4 text-accentBlue" />
+                      <h3 className="text-xs font-bold text-primaryText">
+                        AI Executive Briefing Narration
+                      </h3>
+                      {isSpeaking && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] font-bold bg-accentGreen-subtle text-accentGreen border border-accentGreen/30 animate-pulse">
+                          {isPaused ? "Paused" : "Playing"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-secondaryText">
+                      Listen to your personalized digest read aloud with natural AI speech synthesis.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-2 shrink-0">
+                    <button
+                      onClick={() => handleToggleSpeech(activeBriefing.script || "")}
+                      className="px-4 py-2 rounded-btn bg-accentBlue hover:bg-accentBlue-hover text-white text-xs font-semibold shadow-2xs transition-all flex items-center space-x-1.5"
+                    >
+                      {isSpeaking && !isPaused ? (
+                        <>
+                          <Pause className="w-3.5 h-3.5" />
+                          <span>Pause Narration</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3.5 h-3.5" />
+                          <span>{isPaused ? "Resume Narration" : "Listen to Briefing"}</span>
+                        </>
+                      )}
+                    </button>
+
+                    {isSpeaking && (
+                      <button
+                        onClick={handleStopSpeech}
+                        title="Stop Narration"
+                        className="p-2 rounded-btn bg-surface hover:bg-canvas border border-softBorder text-secondaryText hover:text-accentRed transition-colors"
+                      >
+                        <Square className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Native Audio Stream Player */}
+              {audioUrl && (
                 <div className="p-4 rounded-card bg-canvas border border-softBorder space-y-2">
                   <div className="flex items-center justify-between text-xs font-semibold text-primaryText">
                     <span>Audio Stream</span>
-                    <span className="text-secondaryText font-normal">Stereo 44.1kHz</span>
+                    <span className="text-secondaryText font-normal">Stereo 44.1kHz WAV</span>
                   </div>
                   <audio
                     controls
-                    src={activeBriefing.media_url}
+                    src={audioUrl}
                     className="w-full h-10 accent-accentBlue"
                   >
                     Your browser does not support the audio element.
