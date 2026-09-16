@@ -67,7 +67,7 @@ export default function ShortlistPage() {
               Saved Shortlist
             </h1>
             <p className="text-sm text-secondaryText mt-1">
-              Curated opportunities with approaching deadlines and semantic match profiles.
+              Curated opportunities with approaching deadlines and personalized fit scores.
             </p>
           </div>
 

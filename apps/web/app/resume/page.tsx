@@ -17,7 +17,7 @@ import type {
 const steps: ResumeStep[] = [
   { key: "uploaded", label: "Uploaded" },
   { key: "reading", label: "Text Extraction" },
-  { key: "understanding", label: "Semantic Embedding" },
+  { key: "understanding", label: "AI Skill Analysis" },
   { key: "matching", label: "Opportunity Matching" },
   { key: "ready", label: "Ready & Scored" },
 ];
@@ -128,13 +128,13 @@ export default function ResumePage() {
         <div>
           <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-surface border border-softBorder text-xs font-semibold text-secondaryText mb-2 shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-accentGreen" />
-            <span>Semantic Resume Engine</span>
+            <span>Smart Resume Analysis</span>
           </div>
           <h1 className="font-display text-3xl font-bold tracking-tight text-primaryText">
             Resume Intelligence
           </h1>
           <p className="text-sm text-secondaryText mt-1">
-            Upload your resume to extract competencies, project vector embeddings, and rank opportunities.
+            Upload your resume to analyze your skills, identify relevant jobs, and rank top opportunities.
           </p>
         </div>
 
@@ -150,7 +150,7 @@ export default function ResumePage() {
                   Candidate Account Required for Resume Processing
                 </h3>
                 <p className="text-xs text-secondaryText leading-relaxed">
-                  To securely isolate your parsed career profile, vector embeddings, and personalized match justifications, you must be signed in.
+                  To securely isolate your parsed career profile, skill insights, and personalized match recommendations, you must be signed in.
                 </p>
               </div>
             </div>

@@ -85,7 +85,7 @@ export function UploadDropzone({
           {hasActiveResume ? "Upload New Resume Version" : "Upload Your Resume"}
         </h3>
         <p className="text-xs text-secondaryText">
-          Nexus parses PDF files using PyMuPDF and projects a normalized 384-dimensional vector embedding.
+          Nexus extracts your work history, skills, and projects using AI to accurately match you with open roles.
         </p>
       </div>
 

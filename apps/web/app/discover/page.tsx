@@ -106,7 +106,7 @@ export default function DiscoverPage() {
           <div>
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-surface border border-softBorder text-xs font-semibold text-secondaryText mb-2 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-accentBlue" />
-              <span>Live Semantic Pipeline</span>
+              <span>Live Smart Job Feed</span>
             </div>
             <h1 className="font-display text-3xl font-bold tracking-tight text-primaryText">
               Discover Opportunities

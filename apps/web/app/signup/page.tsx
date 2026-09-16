@@ -63,7 +63,7 @@ export default function SignupPage() {
             Create your Nexus Account
           </h1>
           <p className="text-xs text-secondaryText">
-            Join Nexus to start matching your resume semantically with high-signal roles.
+            Join Nexus to start matching your resume with roles that truly fit your skills.
           </p>
         </div>
 

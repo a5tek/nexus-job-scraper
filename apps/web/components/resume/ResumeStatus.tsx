@@ -111,7 +111,7 @@ export function ResumeStatus({
                 Extracted Profile Text
               </h3>
               <p className="text-xs text-secondaryText">
-                Parsed text tokens utilized for embedding projection
+                Extracted text used by AI to analyze your skills and background
               </p>
             </div>
 

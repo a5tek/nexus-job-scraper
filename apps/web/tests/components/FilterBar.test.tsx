@@ -20,7 +20,7 @@ describe("FilterBar component", () => {
   it("renders search input, filter buttons, and count", () => {
     render(<FilterBar {...defaultProps} />);
 
-    expect(screen.getByPlaceholderText(/search semantic concepts/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/search roles, skills, or tech stack/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^search$/i })).toBeInTheDocument();
     expect(screen.getByText(/remote only/i)).toBeInTheDocument();
     expect(screen.getByText(/high fit \(75%\+\)/i)).toBeInTheDocument();
@@ -30,7 +30,7 @@ describe("FilterBar component", () => {
 
   it("calls onSearchChange when user types in input", () => {
     render(<FilterBar {...defaultProps} />);
-    const input = screen.getByPlaceholderText(/search semantic concepts/i);
+    const input = screen.getByPlaceholderText(/search roles, skills, or tech stack/i);
 
     fireEvent.change(input, { target: { value: "golang distributed" } });
     expect(defaultProps.onSearchChange).toHaveBeenCalledWith("golang distributed");

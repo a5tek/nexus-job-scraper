@@ -14,15 +14,8 @@ import {
   Globe, 
   Headphones, 
   Database, 
-  TrendingUp, 
-  Star, 
-  Users, 
-  Search, 
-  Lock, 
   Layers, 
-  ChevronRight, 
-  Award,
-  Flame
+  ChevronRight
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -48,7 +41,7 @@ export default function LandingPage() {
 
   const stats = [
     { label: "Active Roles Scraped & Indexed", value: "50,000+", change: "Continuously updated 24/7" },
-    { label: "Average Semantic Fit Accuracy", value: "94.8%", change: "Powered by pgvector HNSW" },
+    { label: "Role Matching Accuracy", value: "94.8%", change: "Smart AI skill analysis" },
     { label: "Weekly Audio Digest Runtime", value: "60-90s", change: "Monday morning briefings" },
     { label: "Spam, Duplicate & Ghost Roles", value: "0", change: "Strict algorithmic hygiene" },
   ];
@@ -65,12 +58,12 @@ export default function LandingPage() {
     },
     {
       icon: <Database className="w-6 h-6 text-accentGreen" />,
-      tag: "Neural Retrieval",
-      title: "pgvector Semantic Match Engine",
+      tag: "Intelligent Matching",
+      title: "Deep AI Match Engine",
       description:
-        "Bypasses brittle keyword matching. Nexus converts your resume and job requirements into high-dimensional vector embeddings, identifying deep architectural alignment and generating clear, evidence-based justifications.",
+        "Goes beyond rigid keyword matching. Nexus deeply understands your technical skills and project experience, matching you with roles that genuinely fit and explaining why.",
       link: "/resume",
-      linkText: "Upload profile",
+      linkText: "Upload resume",
     },
     {
       icon: <Bot className="w-6 h-6 text-accentYellow" />,
@@ -96,12 +89,12 @@ export default function LandingPage() {
     {
       num: "01",
       title: "Drop Your Resume Once",
-      desc: "Upload your PDF. Nexus parses extracted skills, engineering projects, and architecture experience into a private vector profile.",
+      desc: "Upload your PDF. Nexus reads your skills, projects, and work history to build a private career profile.",
     },
     {
       num: "02",
-      title: "Neural Matching Across 50K+ Roles",
-      desc: "Every newly scraped listing is automatically evaluated against your background, calculating granular fit percentages and evidence.",
+      title: "Instant Matching Across 50K+ Roles",
+      desc: "Every newly found job is automatically matched against your background, calculating an accurate fit score and clear reasons.",
     },
     {
       num: "03",
@@ -112,33 +105,6 @@ export default function LandingPage() {
       num: "04",
       title: "Weekly Audio & Agent Intelligence",
       desc: "Receive weekly executive audio briefings synthesizing your top 3 matches and consult your AI copilot for tailored interview prep.",
-    },
-  ];
-
-  const testimonials = [
-    {
-      quote:
-        "Nexus surfaced a high-conviction Y Combinator backend engineer role that was buried beneath spam on typical boards. The fit percentage and evidence justification were spot on.",
-      author: "Alex Mercer",
-      role: "Distributed Systems Engineer",
-      company: "Ex-Stripe Intern",
-      stars: 5,
-    },
-    {
-      quote:
-        "The weekly executive audio digest has completely replaced my hours of mindless job board doom-scrolling. I listen on Monday morning and know exactly where to apply.",
-      author: "Priya Kasturirangan",
-      role: "Cloud Platform Dev",
-      company: "BITS Pilani Alum",
-      stars: 5,
-    },
-    {
-      quote:
-        "Asking the AI agent 'Which remote roles closing this week value Go and Kubernetes?' gave me an instant targeted shortlist with direct source links. Game changer.",
-      author: "David Thorne",
-      role: "Senior Infrastructure Engineer",
-      company: "Tech Lead",
-      stars: 5,
     },
   ];
 
@@ -166,8 +132,8 @@ export default function LandingPage() {
             variants={itemVariants}
             className="text-lg md:text-xl text-secondaryText font-normal leading-relaxed"
           >
-            Stop hunting through 47 fragmented tabs. Nexus continuously scrapes public opportunities,
-            understands your resume with AI, semantically matches high-signal roles, and delivers a concise weekly briefing.
+            Stop hunting through dozens of job tabs. Nexus automatically gathers open tech roles,
+            understands your resume with AI, pairs you with roles that truly fit your skills, and delivers a concise weekly briefing.
           </motion.p>
 
           {/* CTA buttons */}
@@ -352,7 +318,7 @@ export default function LandingPage() {
               Engineered to replace fragmented job boards.
             </h2>
             <p className="text-secondaryText text-sm md:text-base leading-relaxed">
-              Traditional job portals rely on stale manual posts and primitive keyword filters. Nexus combines autonomous scrapers with semantic vectors and AI voice media.
+              Traditional job portals rely on outdated posts and rigid keyword filters. Nexus continuously finds active jobs, uses intelligent AI to match your real background, and delivers personalized audio updates.
             </p>
           </motion.div>
 
@@ -515,7 +481,7 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-accentGreen shrink-0 mt-0.5" />
-                  <span>pgvector semantic embeddings measuring real engineering compatibility.</span>
+                  <span>Smart AI matching that measures your genuine technical compatibility.</span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-accentGreen shrink-0 mt-0.5" />
@@ -531,65 +497,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Candidate Testimonials & Publicity */}
-      <section className="py-24 bg-canvas">
-        <div className="max-w-7xl mx-auto px-6 space-y-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center space-y-3 max-w-xl mx-auto"
-          >
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-surface border border-softBorder text-xs font-semibold text-accentYellow shadow-2xs">
-              <Award className="w-3.5 h-3.5" />
-              <span>Candidate Feedback & Endorsements</span>
-            </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-primaryText">
-              Praise from High-Signal Builders
-            </h2>
-            <p className="text-secondaryText text-xs md:text-sm">
-              How engineers and graduates use Nexus to bypass recruiting noise.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, index) => (
-              <motion.div
-                key={t.author}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.5, delay: index * 0.12 }}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className="bg-surface rounded-card p-6 md:p-8 border border-softBorder shadow-2xs space-y-5 flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-1 text-accentYellow">
-                    {[...Array(t.stars)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-xs md:text-sm text-primaryText leading-relaxed italic">
-                    "{t.quote}"
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-softBorder/60 flex items-center space-x-3">
-                  <div className="w-9 h-9 rounded-full bg-accentBlue-subtle text-accentBlue font-bold text-xs flex items-center justify-center">
-                    {t.author[0]}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs text-primaryText">{t.author}</h4>
-                    <p className="text-[11px] text-secondaryText">{t.role} · {t.company}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Security & Isolation Callout */}
       <section className="py-16 bg-surface border-t border-softBorder">
         <div className="max-w-4xl mx-auto px-6 text-center space-y-4">
@@ -601,7 +508,7 @@ export default function LandingPage() {
             Your resume and match data belong strictly to you.
           </h3>
           <p className="text-xs text-secondaryText max-w-xl mx-auto leading-relaxed">
-            Nexus runs strict tenant-scoped database isolation. Uploaded resumes, vector embeddings, and match justifications are private to your authenticated account and are never shared or sold to third parties.
+            Your data is strictly isolated and secure. Uploaded resumes, skill analysis, and match recommendations are private to your authenticated account and are never shared or sold to third parties.
           </p>
         </div>
       </section>
@@ -647,7 +554,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-softBorder py-10 bg-surface text-xs text-secondaryText">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 Nexus Intelligence. Autonomous career intelligence and semantic retrieval.</p>
+          <p>© 2026 Nexus Intelligence. Smart career intelligence and automated role discovery.</p>
           <div className="flex items-center space-x-6">
             <Link href="/discover" className="hover:text-primaryText transition-colors">Discover</Link>
             <Link href="/shortlist" className="hover:text-primaryText transition-colors">Shortlist</Link>

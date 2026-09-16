@@ -46,7 +46,7 @@ export function FilterBar({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search semantic concepts (e.g., 'distributed systems Golang', 'AI agents Python')..."
+            placeholder="Search roles, skills, or tech stack (e.g., 'distributed systems Golang', 'AI agents Python')..."
             className="w-full pl-10 pr-10 py-2.5 rounded-btn bg-canvas border border-softBorder text-sm text-primaryText placeholder:text-secondaryText/60 focus:outline-none focus:ring-2 focus:ring-accentBlue/20 focus:border-accentBlue transition-all"
           />
           {searchQuery && onClearSearch && (
